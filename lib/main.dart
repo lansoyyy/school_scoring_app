@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'core/constants/app_constants.dart';
 import 'core/constants/app_strings.dart';
 import 'core/theme/app_theme.dart';
-import 'widgets/common/app_text.dart';
+import 'features/auth/splash_screen.dart';
 
 void main() {
   runApp(const SchoolScoringApp());
@@ -17,20 +16,8 @@ class SchoolScoringApp extends StatelessWidget {
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      home: const Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AppH1(AppStrings.appTitle),
-              SizedBox(height: 16),
-              AppBodyMedium('Architecture setup complete!'),
-            ],
-          ),
-        ),
-      ),
+      themeMode: ThemeMode.light,
+      home: const SplashScreen(),
     );
   }
 }
