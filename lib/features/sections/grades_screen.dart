@@ -70,37 +70,55 @@ class _GradesScreenState extends State<GradesScreen> {
     return const Color(0xFFEF4444);
   }
 
-  Color _gradeBackColor(int grade) {
-    if (grade >= 90) return const Color(0xFFD1FAE5);
-    if (grade >= 85) return const Color(0xFFDBEAFE);
-    if (grade >= 80) return const Color(0xFFFEF3C7);
-    if (grade >= 75) return const Color(0xFFFFEDD5);
-    return const Color(0xFFFEE2E2);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final sectionColor = Color(widget.section['color'] as int);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.white,
       body: Column(
         children: [
-          _buildHeader(context, sectionColor),
+          _buildHeader(context),
+          _buildStudentInfo(),
           _buildQuarterTabs(),
-          _buildGWACard(),
+          _buildGWARow(),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: ListView.separated(
+              padding: EdgeInsets.zero,
               itemCount: _subjects.length,
+              separatorBuilder: (_, __) =>
+                  const Divider(height: 1, color: Color(0xFFEEEEEE)),
               itemBuilder: (context, i) {
                 final subject = _subjects[i];
                 final grade = _currentGrades[i];
-                return _GradeCard(
-                  subject: subject,
-                  grade: grade,
-                  gradeLabel: _gradeLabel(grade),
-                  gradeColor: _gradeColor(grade),
-                  gradeBackColor: _gradeBackColor(grade),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          subject['name'],
+                          style: const TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$grade',
+                        style: TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: _gradeColor(grade),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -110,96 +128,32 @@ class _GradesScreenState extends State<GradesScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, Color color) {
+  Widget _buildHeader(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [const Color(0xFF0D2137), color.withOpacity(0.9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 20, 20),
-          child: Column(
+          padding: const EdgeInsets.fromLTRB(4, 8, 16, 12),
+          child: Row(
             children: [
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const Text(
-                    'Student Grades',
-                    style: TextStyle(
-                      fontFamily: 'Urbanist',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Color(0xFF1A1A1A),
+                  size: 22,
+                ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const SizedBox(width: 20),
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        widget.student['name'].toString().split(' ').first[0] +
-                            widget.student['name']
-                                .toString()
-                                .split(' ')
-                                .last[0],
-                        style: const TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.student['name'],
-                          style: const TextStyle(
-                            fontFamily: 'Urbanist',
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'ID: ${widget.student['id']}  •  ${widget.section['name']}',
-                          style: const TextStyle(
-                            fontFamily: 'Urbanist',
-                            fontSize: 12,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 4),
+              const Text(
+                'GRADES',
+                style: TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A1A1A),
+                ),
               ),
             ],
           ),
@@ -208,36 +162,99 @@ class _GradesScreenState extends State<GradesScreen> {
     );
   }
 
+  Widget _buildStudentInfo() {
+    final initials =
+        widget.student['name'].toString().split(' ').first[0] +
+        widget.student['name'].toString().split(' ').last[0];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE8E8E8),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                initials,
+                style: const TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF555555),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.student['name'],
+                  style: const TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${widget.student['id']} · ${widget.section['name']}',
+                  style: const TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 12,
+                    color: Color(0xFF888888),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildQuarterTabs() {
     return Container(
-      color: const Color(0xFF1A3F6F),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      color: Colors.white,
       child: Row(
         children: List.generate(4, (i) {
           final isActive = _selectedQuarter == i + 1;
           return Expanded(
             child: GestureDetector(
               onTap: () => setState(() => _selectedQuarter = i + 1),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? Colors.white
-                      : Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  'Q${i + 1}',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: isActive ? const Color(0xFF1A3F6F) : Colors.white70,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Text(
+                      'Q${i + 1}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontSize: 14,
+                        fontWeight: isActive
+                            ? FontWeight.w700
+                            : FontWeight.w400,
+                        color: isActive
+                            ? const Color(0xFF1A1A1A)
+                            : const Color(0xFF888888),
+                      ),
+                    ),
                   ),
-                ),
+                  Container(
+                    height: 3,
+                    color: isActive
+                        ? const Color(0xFFD4A017)
+                        : Colors.transparent,
+                  ),
+                ],
               ),
             ),
           );
@@ -246,206 +263,49 @@ class _GradesScreenState extends State<GradesScreen> {
     );
   }
 
-  Widget _buildGWACard() {
-    final gwa = _gwa;
+  Widget _buildGWARow() {
     return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _gradeColor(gwa.round()),
-            _gradeColor(gwa.round()).withOpacity(0.7),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: _gradeColor(gwa.round()).withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+      color: const Color(0xFFF5F5F5),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'General Weighted Average',
-                style: TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 12,
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                gwa.toStringAsFixed(2),
-                style: const TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 36,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                _gradeLabel(gwa.round()),
-                style: const TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ],
+          const Text(
+            'GWA',
+            style: TextStyle(
+              fontFamily: 'Urbanist',
+              fontSize: 13,
+              color: Color(0xFF888888),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            _gwa.toStringAsFixed(2),
+            style: const TextStyle(
+              fontFamily: 'Urbanist',
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            _gradeLabel(_gwa.round()),
+            style: TextStyle(
+              fontFamily: 'Urbanist',
+              fontSize: 12,
+              color: _gradeColor(_gwa.round()),
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text(
-                'Class Rank',
-                style: TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 12,
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '#${widget.student['rank']}',
-                style: const TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 36,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                'Quarter ${_selectedQuarter}',
-                style: const TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GradeCard extends StatelessWidget {
-  final Map<String, dynamic> subject;
-  final int grade;
-  final String gradeLabel;
-  final Color gradeColor;
-  final Color gradeBackColor;
-
-  const _GradeCard({
-    required this.subject,
-    required this.grade,
-    required this.gradeLabel,
-    required this.gradeColor,
-    required this.gradeBackColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final subjectColor = Color(subject['color'] as int);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: subjectColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(12),
+          Text(
+            'Rank #${widget.student['rank']}',
+            style: const TextStyle(
+              fontFamily: 'Urbanist',
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1A1A1A),
             ),
-            child: Icon(
-              subject['icon'] as IconData,
-              color: subjectColor,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subject['name'],
-                  style: const TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A2E),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: grade / 100,
-                    backgroundColor: const Color(0xFFE5E7EB),
-                    valueColor: AlwaysStoppedAnimation<Color>(gradeColor),
-                    minHeight: 5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '$grade',
-                style: TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: gradeColor,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: gradeBackColor,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  gradeLabel,
-                  style: TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: gradeColor,
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),

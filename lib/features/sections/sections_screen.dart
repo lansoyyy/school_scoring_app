@@ -8,9 +8,21 @@ class SectionsScreen extends StatefulWidget {
   State<SectionsScreen> createState() => _SectionsScreenState();
 }
 
-class _SectionsScreenState extends State<SectionsScreen> {
-  int _filterIndex = 0;
-  final List<String> _filters = ['ALL', 'ELEM', 'JHS', 'SHS'];
+class _SectionsScreenState extends State<SectionsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   static final List<Map<String, dynamic>> _sections = [
     {
@@ -191,88 +203,51 @@ class _SectionsScreenState extends State<SectionsScreen> {
     },
   ];
 
-  List<Map<String, dynamic>> get _filtered {
-    if (_filterIndex == 0) return _sections;
-    final level = _filters[_filterIndex];
-    return _sections.where((s) => s['level'] == level).toList();
-  }
-
-  String _levelLabel(int index) {
-    switch (index) {
-      case 1:
-        return 'Elementary';
-      case 2:
-        return 'Junior High School';
-      case 3:
-        return 'Senior High School';
-      default:
-        return 'All Sections';
-    }
-  }
+  List<Map<String, dynamic>> _byLevel(String level) =>
+      _sections.where((s) => s['level'] == level).toList();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           _buildHeader(),
-          _buildFilterTabs(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Row(
-              children: [
-                Text(
-                  _levelLabel(_filterIndex),
-                  style: const TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A2E),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4A90E2).withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${_filtered.length}',
-                    style: const TextStyle(
-                      fontFamily: 'Urbanist',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF4A90E2),
-                    ),
-                  ),
-                ),
+          Container(
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              labelStyle: const TextStyle(
+                fontFamily: 'Urbanist',
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontFamily: 'Urbanist',
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+              ),
+              labelColor: const Color(0xFF1A1A1A),
+              unselectedLabelColor: const Color(0xFF888888),
+              indicatorColor: const Color(0xFFD4A017),
+              indicatorWeight: 3,
+              indicatorSize: TabBarIndicatorSize.label,
+              tabs: const [
+                Tab(text: 'ELEM'),
+                Tab(text: 'JHS'),
+                Tab(text: 'SHS'),
               ],
             ),
           ),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.15,
-              ),
-              itemCount: _filtered.length,
-              itemBuilder: (context, i) => _SectionCard(
-                section: _filtered[i],
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => StudentsScreen(section: _filtered[i]),
-                  ),
-                ),
-              ),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildSectionList(_byLevel('ELEM'), context),
+                _buildSectionList(_byLevel('JHS'), context),
+                _buildSectionList(_byLevel('SHS'), context),
+              ],
             ),
           ),
         ],
@@ -282,215 +257,102 @@ class _SectionsScreenState extends State<SectionsScreen> {
 
   Widget _buildHeader() {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF0D2137), Color(0xFF1A3F6F), Color(0xFF2E6AAD)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      width: double.infinity,
+      color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Sections',
-                    style: TextStyle(
-                      fontFamily: 'Urbanist',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Don Stevens Institute',
-                    style: TextStyle(
-                      fontFamily: 'Urbanist',
-                      fontSize: 13,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.search_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: const Text(
+            'SECTIONS',
+            style: TextStyle(
+              fontFamily: 'Urbanist',
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1A1A1A),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFilterTabs() {
-    return Container(
-      color: const Color(0xFF1A3F6F),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-      child: Row(
-        children: List.generate(_filters.length, (i) {
-          final isActive = _filterIndex == i;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _filterIndex = i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? Colors.white
-                      : Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  _filters[i],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: isActive ? const Color(0xFF1A3F6F) : Colors.white70,
+  Widget _buildSectionList(
+    List<Map<String, dynamic>> sections,
+    BuildContext context,
+  ) {
+    return ListView.separated(
+      padding: EdgeInsets.zero,
+      itemCount: sections.length,
+      separatorBuilder: (_, __) =>
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+      itemBuilder: (context, i) {
+        final s = sections[i];
+        final initials = s['logo'] as String;
+        return InkWell(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => StudentsScreen(section: s)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE8E8E8),
+                    shape: BoxShape.circle,
                   ),
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  final Map<String, dynamic> section;
-  final VoidCallback onTap;
-
-  const _SectionCard({required this.section, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Color(section['color'] as int);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 6,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [color, color.withOpacity(0.7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          section['logo'],
-                          style: const TextStyle(
-                            fontFamily: 'Urbanist',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      section['name'],
+                  child: Center(
+                    child: Text(
+                      initials.length > 3 ? initials.substring(0, 3) : initials,
                       style: const TextStyle(
                         fontFamily: 'Urbanist',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A2E),
-                        height: 1.3,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF555555),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.person_outline,
-                          size: 12,
-                          color: Colors.grey[500],
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            '${section['count']} students',
-                            style: const TextStyle(
-                              fontFamily: 'Urbanist',
-                              fontSize: 11,
-                              color: Color(0xFF6B7280),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        s['name'],
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${s['adviser']} · ${s['count']} students',
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 12,
+                          color: Color(0xFF888888),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  color: Color(0xFFCCCCCC),
+                  size: 20,
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
