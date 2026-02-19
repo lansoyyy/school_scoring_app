@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -33,6 +34,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Column(
         children: [
           _buildHeader(context),
@@ -52,7 +54,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       height: 160,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF0D2137), Color(0xFF1A3F6F), Color(0xFF2E6AAD)],
+          colors: [AppColors.gray800, AppColors.gray700, AppColors.gray600],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -68,20 +70,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             children: [
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back_ios,
-                    color: Colors.white, size: 20),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: AppColors.textWhite,
+                  size: 20,
+                ),
               ),
-              const Expanded(
+              Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       'Forgot Password',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Urbanist',
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppColors.textWhite,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -90,7 +95,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       style: TextStyle(
                         fontFamily: 'Urbanist',
                         fontSize: 13,
-                        color: Colors.white70,
+                        color: AppColors.textWhite.withOpacity(0.7),
                       ),
                     ),
                   ],
@@ -115,11 +120,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: const Color(0xFFDBEAFE),
+              color: AppColors.gray100,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(Icons.lock_reset_outlined,
-                color: Color(0xFF4A90E2), size: 36),
+            child: const Icon(
+              Icons.lock_reset_outlined,
+              color: AppColors.gray600,
+              size: 36,
+            ),
           ),
           const SizedBox(height: 24),
           const Text(
@@ -128,16 +136,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               fontFamily: 'Urbanist',
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1A2E),
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Enter the email address associated with your account. We\'ll send you a link to reset your password.',
+            'Enter email address associated with your account. We\'ll send you a link to reset your password.',
             style: TextStyle(
               fontFamily: 'Urbanist',
               fontSize: 14,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
               height: 1.6,
             ),
           ),
@@ -148,7 +156,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               fontFamily: 'Urbanist',
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1A1A2E),
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -159,37 +167,44 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             decoration: InputDecoration(
               hintText: 'Enter your email',
               hintStyle: TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 14,
-                  color: Colors.grey[400]),
-              prefixIcon:
-                  Icon(Icons.email_outlined, color: Colors.grey[400], size: 20),
+                fontFamily: 'Urbanist',
+                fontSize: 14,
+                color: AppColors.textTertiary,
+              ),
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                color: AppColors.textTertiary,
+                size: 20,
+              ),
               filled: true,
-              fillColor: const Color(0xFFF8F9FA),
+              fillColor: AppColors.inputBackground,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                borderSide: const BorderSide(color: AppColors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                borderSide: const BorderSide(color: AppColors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: Color(0xFF4A90E2), width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFEF4444)),
+                borderSide: const BorderSide(color: AppColors.error),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: Color(0xFFEF4444), width: 2),
+                borderSide: const BorderSide(color: AppColors.error, width: 2),
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
             validator: (v) =>
                 (v == null || v.isEmpty) ? 'Email is required' : null,
@@ -201,9 +216,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: ElevatedButton(
               onPressed: _isLoading ? null : _sendReset,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4A90E2),
+                backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 elevation: 0,
               ),
               child: _isLoading
@@ -211,7 +227,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2.5),
+                        color: AppColors.textWhite,
+                        strokeWidth: 2.5,
+                      ),
                     )
                   : const Text(
                       'Send Reset Link',
@@ -219,7 +237,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         fontFamily: 'Urbanist',
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppColors.textWhite,
                       ),
                     ),
             ),
@@ -231,9 +249,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Text(
                 'Remember your password? ',
                 style: TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 14,
-                    color: Colors.grey[600]),
+                  fontFamily: 'Urbanist',
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
               ),
               GestureDetector(
                 onTap: () => Navigator.pop(context),
@@ -243,7 +262,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     fontFamily: 'Urbanist',
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF4A90E2),
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -263,11 +282,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: const Color(0xFFD1FAE5),
+            color: AppColors.successLight,
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.mark_email_read_outlined,
-              color: Color(0xFF10B981), size: 50),
+          child: const Icon(
+            Icons.mark_email_read_outlined,
+            color: AppColors.success,
+            size: 50,
+          ),
         ),
         const SizedBox(height: 28),
         const Text(
@@ -276,7 +298,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             fontFamily: 'Urbanist',
             fontSize: 24,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A2E),
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -286,7 +308,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           style: TextStyle(
             fontFamily: 'Urbanist',
             fontSize: 14,
-            color: Colors.grey[600],
+            color: AppColors.textSecondary,
             height: 1.6,
           ),
         ),
@@ -297,9 +319,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4A90E2),
+              backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
+                borderRadius: BorderRadius.circular(14),
+              ),
               elevation: 0,
             ),
             child: const Text(
@@ -308,7 +331,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 fontFamily: 'Urbanist',
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: AppColors.textWhite,
               ),
             ),
           ),
@@ -317,11 +340,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         TextButton(
           onPressed: _sendReset,
           child: Text(
-            'Didn\'t receive the email? Resend',
+            'Didn\'t receive email? Resend',
             style: TextStyle(
               fontFamily: 'Urbanist',
               fontSize: 14,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
         ),

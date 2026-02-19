@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -58,7 +59,8 @@ class AppButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: backgroundColor,
             foregroundColor: textColor,
-            disabledBackgroundColor: Colors.grey,
+            disabledBackgroundColor: AppColors.buttonDisabled,
+            disabledForegroundColor: AppColors.buttonTextDisabled,
             padding: padding ?? _getPadding(),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(borderRadius),

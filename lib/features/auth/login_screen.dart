@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import '../../navigation/main_navigation.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
@@ -40,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Column(
         children: [
           _buildHeader(),
@@ -58,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         fontFamily: 'Urbanist',
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A2E),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -67,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(
                         fontFamily: 'Urbanist',
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -78,7 +80,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       style: const TextStyle(fontFamily: 'Urbanist'),
                       decoration: _inputDecoration(
-                          'Enter your email', Icons.email_outlined),
+                        'Enter your email',
+                        Icons.email_outlined,
+                      ),
                       validator: (v) =>
                           (v == null || v.isEmpty) ? 'Email is required' : null,
                     ),
@@ -89,21 +93,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passCtrl,
                       obscureText: _obscurePass,
                       style: const TextStyle(fontFamily: 'Urbanist'),
-                      decoration: _inputDecoration(
-                        'Enter your password',
-                        Icons.lock_outlined,
-                      ).copyWith(
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePass
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            color: Colors.grey[500],
+                      decoration:
+                          _inputDecoration(
+                            'Enter your password',
+                            Icons.lock_outlined,
+                          ).copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePass
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                color: AppColors.textTertiary,
+                              ),
+                              onPressed: () =>
+                                  setState(() => _obscurePass = !_obscurePass),
+                            ),
                           ),
-                          onPressed: () =>
-                              setState(() => _obscurePass = !_obscurePass),
-                        ),
-                      ),
                       validator: (v) => (v == null || v.isEmpty)
                           ? 'Password is required'
                           : null,
@@ -119,9 +124,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 20,
                               child: Checkbox(
                                 value: _rememberMe,
-                                activeColor: const Color(0xFF4A90E2),
+                                activeColor: AppColors.primary,
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4)),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
                                 onChanged: (v) =>
                                     setState(() => _rememberMe = v!),
                               ),
@@ -132,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(
                                 fontFamily: 'Urbanist',
                                 fontSize: 13,
-                                color: Colors.grey[700],
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ],
@@ -141,7 +147,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const ForgotPasswordScreen()),
+                              builder: (_) => const ForgotPasswordScreen(),
+                            ),
                           ),
                           child: const Text(
                             'Forgot Password?',
@@ -149,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontFamily: 'Urbanist',
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF4A90E2),
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
@@ -162,9 +169,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _login,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4A90E2),
+                          backgroundColor: AppColors.primary,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                           elevation: 0,
                         ),
                         child: _isLoading
@@ -172,7 +180,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 width: 22,
                                 height: 22,
                                 child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2.5),
+                                  color: AppColors.textWhite,
+                                  strokeWidth: 2.5,
+                                ),
                               )
                             : const Text(
                                 'Sign In',
@@ -180,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   fontFamily: 'Urbanist',
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.white,
+                                  color: AppColors.textWhite,
                                 ),
                               ),
                       ),
@@ -194,14 +204,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(
                             fontFamily: 'Urbanist',
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: AppColors.textSecondary,
                           ),
                         ),
                         GestureDetector(
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const SignupScreen()),
+                              builder: (_) => const SignupScreen(),
+                            ),
                           ),
                           child: const Text(
                             'Sign Up',
@@ -209,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontFamily: 'Urbanist',
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF4A90E2),
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
@@ -230,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
       height: 220,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF0D2137), Color(0xFF1A3F6F), Color(0xFF2E6AAD)],
+          colors: [AppColors.gray800, AppColors.gray700, AppColors.gray600],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -248,11 +259,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: AppColors.shadowColorDark,
                       blurRadius: 16,
                       offset: const Offset(0, 8),
                     ),
@@ -265,7 +276,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontFamily: 'Urbanist',
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0D2137),
+                      color: AppColors.gray800,
                       letterSpacing: 2,
                     ),
                   ),
@@ -278,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontFamily: 'Urbanist',
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: AppColors.textWhite,
                 ),
               ),
               const SizedBox(height: 4),
@@ -287,7 +298,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 12,
-                  color: Colors.white.withOpacity(0.7),
+                  color: AppColors.textWhite.withOpacity(0.7),
                 ),
               ),
             ],
@@ -304,7 +315,7 @@ class _LoginScreenState extends State<LoginScreen> {
         fontFamily: 'Urbanist',
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: Color(0xFF1A1A2E),
+        color: AppColors.textPrimary,
       ),
     );
   }
@@ -312,30 +323,33 @@ class _LoginScreenState extends State<LoginScreen> {
   InputDecoration _inputDecoration(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(
-          fontFamily: 'Urbanist', fontSize: 14, color: Colors.grey[400]),
-      prefixIcon: Icon(icon, color: Colors.grey[400], size: 20),
+      hintStyle: const TextStyle(
+        fontFamily: 'Urbanist',
+        fontSize: 14,
+        color: AppColors.textTertiary,
+      ),
+      prefixIcon: Icon(icon, color: AppColors.textTertiary, size: 20),
       filled: true,
-      fillColor: const Color(0xFFF8F9FA),
+      fillColor: AppColors.inputBackground,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        borderSide: const BorderSide(color: AppColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        borderSide: const BorderSide(color: AppColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF4A90E2), width: 2),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFEF4444)),
+        borderSide: const BorderSide(color: AppColors.error),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFEF4444), width: 2),
+        borderSide: const BorderSide(color: AppColors.error, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );

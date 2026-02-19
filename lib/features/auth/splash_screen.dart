@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -21,21 +22,32 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _logoCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1000));
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
     _textCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800));
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
 
-    _scaleAnim = Tween<double>(begin: 0.4, end: 1.0).animate(
-        CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut));
+    _scaleAnim = Tween<double>(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut));
     _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-            parent: _logoCtrl,
-            curve: const Interval(0.0, 0.6, curve: Curves.easeIn)));
-    _textFadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _textCtrl, curve: Curves.easeIn));
-    _textSlideAnim =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-            CurvedAnimation(parent: _textCtrl, curve: Curves.easeOut));
+      CurvedAnimation(
+        parent: _logoCtrl,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
+    _textFadeAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _textCtrl, curve: Curves.easeIn));
+    _textSlideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _textCtrl, curve: Curves.easeOut));
 
     _runSplash();
   }
@@ -73,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0D2137), Color(0xFF1A3F6F), Color(0xFF2E6AAD)],
+            colors: [AppColors.gray800, AppColors.gray700, AppColors.gray600],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -90,17 +102,19 @@ class _SplashScreenState extends State<SplashScreen>
                       builder: (context, child) => Opacity(
                         opacity: _fadeAnim.value,
                         child: Transform.scale(
-                            scale: _scaleAnim.value, child: child),
+                          scale: _scaleAnim.value,
+                          child: child,
+                        ),
                       ),
                       child: Container(
                         width: 130,
                         height: 130,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: AppColors.shadowColorDark,
                               blurRadius: 30,
                               offset: const Offset(0, 15),
                             ),
@@ -116,7 +130,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   fontFamily: 'Urbanist',
                                   fontSize: 36,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFF0D2137),
+                                  color: AppColors.gray800,
                                   letterSpacing: 3,
                                 ),
                               ),
@@ -126,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   fontFamily: 'Urbanist',
                                   fontSize: 8,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF2E6AAD),
+                                  color: AppColors.gray600,
                                   letterSpacing: 2,
                                 ),
                               ),
@@ -141,7 +155,9 @@ class _SplashScreenState extends State<SplashScreen>
                       builder: (context, child) => Opacity(
                         opacity: _textFadeAnim.value,
                         child: SlideTransition(
-                            position: _textSlideAnim, child: child),
+                          position: _textSlideAnim,
+                          child: child,
+                        ),
                       ),
                       child: Column(
                         children: [
@@ -152,7 +168,7 @@ class _SplashScreenState extends State<SplashScreen>
                               fontFamily: 'Urbanist',
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                              color: AppColors.textWhite,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -161,7 +177,7 @@ class _SplashScreenState extends State<SplashScreen>
                             width: 50,
                             height: 2,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF5A623),
+                              color: AppColors.gray400,
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
@@ -173,7 +189,7 @@ class _SplashScreenState extends State<SplashScreen>
                               fontFamily: 'Urbanist',
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
-                              color: Colors.white.withOpacity(0.75),
+                              color: AppColors.textWhite.withOpacity(0.75),
                               height: 1.6,
                             ),
                           ),
@@ -194,7 +210,8 @@ class _SplashScreenState extends State<SplashScreen>
                       height: 28,
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white.withOpacity(0.6)),
+                          AppColors.textWhite.withOpacity(0.6),
+                        ),
                         strokeWidth: 2.5,
                       ),
                     ),
@@ -204,7 +221,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: TextStyle(
                         fontFamily: 'Urbanist',
                         fontSize: 11,
-                        color: Colors.white.withOpacity(0.4),
+                        color: AppColors.textWhite.withOpacity(0.4),
                       ),
                     ),
                   ],
