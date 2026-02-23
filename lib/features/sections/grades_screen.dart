@@ -149,7 +149,7 @@ class _GradesScreenState extends State<GradesScreen> {
               const SizedBox(width: 4),
               const Expanded(
                 child: Text(
-                  'SECTIONS',
+                  'GRADES',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 22, // Updated font size
@@ -223,24 +223,57 @@ class _GradesScreenState extends State<GradesScreen> {
     );
   }
 
-  int _selectedYear = 2026;
+  int _selectedYear = 0; // 0=This Year, 1=Last Year, 2=Last 2 Year
+  final List<String> _yearLabels = ['This Year', 'Last Year', 'Last 2 Year'];
 
   Widget _buildQuarterTabs() {
     return Container(
       color: Colors.white,
       child: Column(
         children: [
+          // Scrollable Year Header
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: [
-                _buildYearTab(2026),
-                _buildYearTab(2025),
-                _buildYearTab(2024),
-              ],
+              children: List.generate(3, (index) {
+                final isActive = _selectedYear == index;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedYear = index),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: isActive
+                              ? const Color(0xFFD4A017)
+                              : Colors.transparent,
+                          width: 3,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      _yearLabels[index],
+                      style: TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontSize: 14,
+                        fontWeight: isActive
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: isActive
+                            ? const Color(0xFF1A1A1A)
+                            : const Color(0xFF888888),
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
+          // Q1-Q4 Tabs
           Row(
             children: List.generate(4, (i) {
               final isActive = _selectedQuarter == i + 1;
@@ -283,68 +316,75 @@ class _GradesScreenState extends State<GradesScreen> {
     );
   }
 
-  Widget _buildYearTab(int year) {
-    final isActive = _selectedYear == year;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedYear = year),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isActive ? const Color(0xFF1A1A1A) : Colors.transparent,
-              width: 2,
-            ),
-          ),
-        ),
-        child: Text(
-          '$year',
-          style: TextStyle(
-            fontFamily: 'Urbanist',
-            fontSize: 15,
-            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-            color: isActive ? const Color(0xFF1A1A1A) : const Color(0xFF888888),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildGWARow() {
     return Container(
       color: const Color(0xFFF5F5F5),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          const Text(
-            'GWA',
-            style: TextStyle(
-              fontFamily: 'Urbanist',
-              fontSize: 13,
-              color: Color(0xFF888888),
+          // Link Image
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE8E8E8),
+              shape: BoxShape.circle,
             ),
+            child: const Icon(Icons.link, size: 20, color: Color(0xFF888888)),
           ),
           const SizedBox(width: 12),
-          Text(
-            _gwa.toStringAsFixed(2),
-            style: const TextStyle(
-              fontFamily: 'Urbanist',
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1A1A),
+          // Period and Remarks
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'June - August',
+                  style: const TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Good',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 12,
+                    color: _gradeColor(_gwa.round()),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            _gradeLabel(_gwa.round()),
-            style: TextStyle(
-              fontFamily: 'Urbanist',
-              fontSize: 12,
-              color: _gradeColor(_gwa.round()),
-              fontWeight: FontWeight.w600,
-            ),
+          // GWA
+          Row(
+            children: [
+              const Text(
+                'GWA',
+                style: TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 13,
+                  color: Color(0xFF888888),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _gwa.toStringAsFixed(2),
+                style: const TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+            ],
           ),
-          const Spacer(),
+          const SizedBox(width: 16),
+          // Rank
           Text(
             'Rank #${widget.student['rank']}',
             style: const TextStyle(

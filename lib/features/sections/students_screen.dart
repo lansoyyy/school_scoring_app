@@ -12,6 +12,7 @@ class StudentsScreen extends StatefulWidget {
 
 class _StudentsScreenState extends State<StudentsScreen> {
   final _searchCtrl = TextEditingController();
+  bool _isSearching = false;
   String _searchQuery = '';
 
   static const List<Map<String, dynamic>> _allStudents = [
@@ -156,44 +157,91 @@ class _StudentsScreenState extends State<StudentsScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      height: 80, // Updated header height
+      height: 80,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(4, 8, 16, 12),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Color(0xFF1A1A1A),
-                  size: 22,
+          child: _isSearching
+              ? Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _isSearching = false;
+                          _searchQuery = '';
+                          _searchCtrl.clear();
+                        });
+                      },
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchCtrl,
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          hintText: 'Search students...',
+                          border: InputBorder.none,
+                          hintStyle: TextStyle(
+                            fontFamily: 'Urbanist',
+                            color: Color(0xFF888888),
+                          ),
+                        ),
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    if (_searchQuery.isNotEmpty)
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _searchQuery = '';
+                            _searchCtrl.clear();
+                          });
+                        },
+                        icon: const Icon(Icons.clear, color: Color(0xFF888888)),
+                      ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF1A1A1A),
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Expanded(
+                      child: Text(
+                        'STUDENTS',
+                        style: TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => _isSearching = true),
+                      icon: const Icon(
+                        Icons.search,
+                        color: Color(0xFF555555),
+                        size: 22,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  'SECTIONS',
-                  style: const TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 22, // Updated font size
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.search,
-                  color: Color(0xFF555555),
-                  size: 22,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

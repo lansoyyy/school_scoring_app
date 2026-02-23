@@ -11,17 +11,14 @@ class SectionsScreen extends StatefulWidget {
 class _SectionsScreenState extends State<SectionsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   static final List<Map<String, dynamic>> _sections = [
@@ -219,8 +216,28 @@ class _SectionsScreenState extends State<SectionsScreen>
     },
   ];
 
-  List<Map<String, dynamic>> _byLevel(String level) =>
-      _sections.where((s) => s['level'] == level).toList();
+  List<Map<String, dynamic>> _byLevel(String level) {
+    final sections = _sections.where((s) => s['level'] == level).toList();
+    if (_searchQuery.isEmpty) return sections;
+    return sections
+        .where(
+          (s) =>
+              s['name']!.toString().toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ||
+              s['adviser']!.toString().toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ),
+        )
+        .toList();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +264,7 @@ class _SectionsScreenState extends State<SectionsScreen>
               unselectedLabelColor: const Color(0xFF888888),
               indicatorColor: const Color(0xFFD4A017),
               indicatorWeight: 3,
-              indicatorSize: TabBarIndicatorSize.label,
+              indicatorSize: TabBarIndicatorSize.tab,
               tabs: const [
                 Tab(text: 'PREP'),
                 Tab(text: 'ELEM'),
@@ -275,21 +292,85 @@ class _SectionsScreenState extends State<SectionsScreen>
 
   Widget _buildHeader() {
     return Container(
-      width: double.infinity,
+      height: 80,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-          child: const Text(
-            'SECTIONS',
-            style: TextStyle(
-              fontFamily: 'Urbanist',
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1A1A),
-            ),
-          ),
+          padding: const EdgeInsets.fromLTRB(4, 8, 16, 12),
+          child: _isSearching
+              ? Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _isSearching = false;
+                          _searchQuery = '';
+                          _searchController.clear();
+                        });
+                      },
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          hintText: 'Search sections...',
+                          border: InputBorder.none,
+                          hintStyle: TextStyle(
+                            fontFamily: 'Urbanist',
+                            color: Color(0xFF888888),
+                          ),
+                        ),
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    if (_searchQuery.isNotEmpty)
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _searchQuery = '';
+                            _searchController.clear();
+                          });
+                        },
+                        icon: const Icon(Icons.clear, color: Color(0xFF888888)),
+                      ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    const Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 12),
+                        child: Text(
+                          'SECTIONS',
+                          style: TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => _isSearching = true),
+                      icon: const Icon(
+                        Icons.search,
+                        size: 24,
+                        color: Color(0xFF555555),
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );

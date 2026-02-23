@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'news_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,43 +10,52 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
+  String _searchQuery = '';
 
   static const List<Map<String, String>> _news = [
     {
       'title': 'DSI Basketball Team Wins Regional Championship',
-      'date': 'FEBRUARY 18, 2026',
+      'date': 'February 18, 2026',
       'desc':
           'Our basketball team clinched the regional championship after an outstanding performance against rival schools. The team showed exceptional teamwork and dedication throughout the tournament.',
+      'image': 'basketball',
     },
     {
       'title': 'Honor Roll Announcement – 2nd Quarter',
-      'date': 'FEBRUARY 15, 2026',
+      'date': 'February 15, 2026',
       'desc':
           'The 2nd quarter honor roll has been released. Congratulations to all students who made the list this quarter.',
+      'image': 'academic',
     },
     {
       'title': 'Annual Sports Festival 2026 Opening Ceremony',
-      'date': 'FEBRUARY 12, 2026',
+      'date': 'February 12, 2026',
       'desc':
           'The Annual Sports Festival opened with a grand ceremony featuring all sections competing for the championship.',
+      'image': 'sports',
     },
     {
       'title': 'Volleyball Intramurals: JHS Finals Recap',
-      'date': 'FEBRUARY 10, 2026',
+      'date': 'February 10, 2026',
       'desc':
           'Grade 10-Rizal defeated Grade 9-Bonifacio in a thrilling 5-set volleyball match to claim the JHS title.',
+      'image': 'volleyball',
     },
     {
       'title': 'Science Fair 2026 – Outstanding Projects',
-      'date': 'FEBRUARY 5, 2026',
+      'date': 'February 5, 2026',
       'desc':
           'Students from Grade 8 and Grade 11 presented remarkable science projects that wowed the judges.',
+      'image': 'science',
     },
     {
       'title': 'Enrollment for S.Y. 2026-2027 Now Open',
-      'date': 'FEBRUARY 1, 2026',
+      'date': 'February 1, 2026',
       'desc':
           'Enrollment for the upcoming school year is now open. Visit the registrar\'s office for more information.',
+      'image': 'enrollment',
     },
   ];
 
@@ -60,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -95,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -113,126 +123,116 @@ class _HomeScreenState extends State<HomeScreen>
         bottom: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFCCCCCC)),
-                  borderRadius: BorderRadius.circular(6),
-                  color: Colors.white,
-                ),
-                child: const Center(
-                  child: Text(
-                    'DSI',
-                    style: TextStyle(
-                      fontFamily: 'Urbanist',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A1A1A),
+          child: _isSearching
+              ? Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _isSearching = false;
+                          _searchQuery = '';
+                          _searchController.clear();
+                        });
+                      },
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF1A1A1A),
+                      ),
                     ),
-                  ),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          hintText: 'Search news...',
+                          border: InputBorder.none,
+                          hintStyle: TextStyle(
+                            fontFamily: 'Urbanist',
+                            color: Color(0xFF888888),
+                          ),
+                        ),
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    if (_searchQuery.isNotEmpty)
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _searchQuery = '';
+                            _searchController.clear();
+                          });
+                        },
+                        icon: const Icon(Icons.clear, color: Color(0xFF888888)),
+                      ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFCCCCCC)),
+                        borderRadius: BorderRadius.circular(6),
+                        color: Colors.white,
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'DSI',
+                          style: TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => setState(() => _isSearching = true),
+                      icon: const Icon(
+                        Icons.search,
+                        size: 24,
+                        color: Color(0xFF555555),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.person_outline,
+                      size: 28,
+                      color: Color(0xFF555555),
+                    ),
+                  ],
                 ),
-              ),
-              const Spacer(),
-              const Icon(
-                Icons.person_outline,
-                size: 28,
-                color: Color(0xFF555555),
-              ),
-            ],
-          ),
         ),
       ),
     );
+  }
+
+  List<Map<String, String>> get _filteredNews {
+    if (_searchQuery.isEmpty) return _news;
+    return _news
+        .where(
+          (n) =>
+              n['title']!.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              n['desc']!.toLowerCase().contains(_searchQuery.toLowerCase()),
+        )
+        .toList();
   }
 
   Widget _buildLatestTab() {
+    final news = _isSearching ? _filteredNews : _news;
     return ListView.builder(
       padding: EdgeInsets.zero,
-      itemCount: _news.length + 1,
+      itemCount: news.length,
       itemBuilder: (context, index) {
-        if (index == 0) return _buildFeaturedCard();
-        final item = _news[index - 1];
-        return _NewsListItem(news: item);
+        final item = news[index];
+        return _NewsCard(news: item);
       },
-    );
-  }
-
-  Widget _buildFeaturedCard() {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => NewsDetailScreen(
-            news: {..._news[0], 'category': 'Sports', 'color': 'red'},
-            accentColor: const Color(0xFFCC0000),
-          ),
-        ),
-      ),
-      child: Container(
-        width: double.infinity,
-        height: 240,
-        color: const Color(0xFF1A1A1A),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
-              color: const Color(0xFF2A2A2A),
-              child: const Center(
-                child: Icon(
-                  Icons.sports_basketball,
-                  size: 80,
-                  color: Color(0xFF444444),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 12,
-              right: 12,
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: const BoxDecoration(
-                  color: Color(0x99000000),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.share_outlined,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [Color(0xDD000000), Colors.transparent],
-                  ),
-                ),
-                child: const Text(
-                  'DSI Basketball Team Wins Regional Championship',
-                  style: TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    height: 1.2,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -252,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen>
       final section = s['section'] as String;
       final gradeMatch = RegExp(r'(Grade \d+)').firstMatch(section);
       final grade = gradeMatch != null ? gradeMatch.group(1)! : 'Other';
-      
+
       if (!groupedStandings.containsKey(grade)) {
         groupedStandings[grade] = [];
       }
@@ -295,12 +295,21 @@ class _HomeScreenState extends State<HomeScreen>
             ...gradeStandings.asMap().entries.map((entry) {
               final index = entry.key;
               final s = entry.value;
+              final sectionName = s['section']!;
+              final initials =
+                  sectionName.split('-').first.split(' ').last[0] +
+                  sectionName.split('-').last[0];
+
               return Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
                     child: Row(
                       children: [
+                        // Rank
                         SizedBox(
                           width: 28,
                           child: Text(
@@ -314,17 +323,54 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            s['section']!,
-                            style: const TextStyle(
-                              fontFamily: 'Urbanist',
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1A1A1A),
+                        // Section Avatar
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE8E8E8),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              initials,
+                              style: const TextStyle(
+                                fontFamily: 'Urbanist',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF555555),
+                              ),
                             ),
                           ),
                         ),
+                        const SizedBox(width: 12),
+                        // Section Name and Record
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                sectionName,
+                                style: const TextStyle(
+                                  fontFamily: 'Urbanist',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                '10-1',
+                                style: TextStyle(
+                                  fontFamily: 'Urbanist',
+                                  fontSize: 13,
+                                  color: Color(0xFF888888),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Points
                         Text(
                           s['pts']!,
                           style: const TextStyle(
@@ -349,90 +395,87 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
-
-class _NewsListItem extends StatelessWidget {
+class _NewsCard extends StatelessWidget {
   final Map<String, String> news;
-  const _NewsListItem({required this.news});
+  const _NewsCard({required this.news});
+
+  IconData _getIcon(String? type) {
+    switch (type) {
+      case 'basketball':
+        return Icons.sports_basketball;
+      case 'volleyball':
+        return Icons.sports_volleyball;
+      case 'sports':
+        return Icons.emoji_events;
+      case 'science':
+        return Icons.science;
+      case 'academic':
+        return Icons.school;
+      case 'enrollment':
+        return Icons.app_registration;
+      default:
+        return Icons.article;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => NewsDetailScreen(
-            news: {...news, 'category': 'News', 'color': 'blue'},
-            accentColor: const Color(0xFF1A1A1A),
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.article_outlined,
-                    color: Color(0xFFCCCCCC),
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        news['date']!,
-                        style: const TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 11,
-                          color: Color(0xFF888888),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        news['title']!,
-                        style: const TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1A1A1A),
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        news['desc']!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 13,
-                          color: Color(0xFF555555),
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          height: 200,
+          color: const Color(0xFF1A1A1A),
+          child: Center(
+            child: Icon(
+              _getIcon(news['image']),
+              size: 80,
+              color: const Color(0xFF444444),
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
-        ],
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                news['date']!.toUpperCase(),
+                style: const TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF888888),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                news['title']!,
+                style: const TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A1A),
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                news['desc']!,
+                style: const TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 14,
+                  color: Color(0xFF555555),
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1, color: Color(0xFFEEEEEE)),
+      ],
     );
   }
 }
