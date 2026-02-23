@@ -4,6 +4,7 @@ import '../features/sports/sports_screen.dart';
 import '../features/live/live_screen.dart';
 import '../features/sections/sections_screen.dart';
 import '../features/stats/stats_screen.dart';
+import '../widgets/common/activities_banner.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -27,18 +28,22 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFE8E8E8), width: 1)),
-        ),
-        child: SafeArea(
-          child: SizedBox(
-            height: 60,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const ActivitiesBanner(),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: Color(0xFFE8E8E8), width: 1)),
+            ),
+            child: SafeArea(
+              child: SizedBox(
+                height: 60,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _NavItem(
                   icon: Icons.home_outlined,
                   activeIcon: Icons.home,
                   label: 'Home',
@@ -77,6 +82,8 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
           ),
         ),
+      ),
+        ],
       ),
     );
   }

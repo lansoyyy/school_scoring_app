@@ -476,90 +476,141 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildRankList(List<Map<String, dynamic>> students) {
-    return ListView.separated(
+    // Group students by grade/level
+    final groupedStudents = <String, List<Map<String, dynamic>>>{};
+    for (var s in students) {
+      final section = s['section'] as String;
+      final gradeMatch = RegExp(r'(Grade \d+)').firstMatch(section);
+      final grade = gradeMatch != null ? gradeMatch.group(1)! : 'Other';
+      
+      if (!groupedStudents.containsKey(grade)) {
+        groupedStudents[grade] = [];
+      }
+      groupedStudents[grade]!.add(s);
+    }
+
+    final sortedGrades = groupedStudents.keys.toList()
+      ..sort((a, b) {
+        if (a == 'Other') return 1;
+        if (b == 'Other') return -1;
+        final numA = int.parse(a.split(' ')[1]);
+        final numB = int.parse(b.split(' ')[1]);
+        return numB.compareTo(numA); // Descending order (Grade 12 -> Grade 9)
+      });
+
+    return ListView.builder(
       padding: EdgeInsets.zero,
-      itemCount: students.length,
-      separatorBuilder: (_, __) =>
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+      itemCount: sortedGrades.length,
       itemBuilder: (context, i) {
-        final s = students[i];
-        final rank = i + 1;
-        final initials =
-            s['name'].toString().split(' ').first[0] +
-            s['name'].toString().split(' ').last[0];
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 24,
-                child: Text(
-                  '$rank',
-                  style: const TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8E8E8),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    initials,
-                    style: const TextStyle(
-                      fontFamily: 'Urbanist',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF555555),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      s['name'],
-                      style: const TextStyle(
-                        fontFamily: 'Urbanist',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1A1A1A),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      s['section'],
-                      style: const TextStyle(
-                        fontFamily: 'Urbanist',
-                        fontSize: 12,
-                        color: Color(0xFF888888),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                (s['score'] as double).toStringAsFixed(1),
+        final grade = sortedGrades[i];
+        final gradeStudents = groupedStudents[grade]!;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: const Color(0xFFF5F5F5),
+              child: Text(
+                grade,
                 style: const TextStyle(
                   fontFamily: 'Urbanist',
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A1A),
+                  color: Color(0xFF555555),
                 ),
               ),
-            ],
-          ),
+            ),
+            ...gradeStudents.asMap().entries.map((entry) {
+              final index = entry.key;
+              final s = entry.value;
+              final rank = index + 1;
+              final initials = s['name'].toString().split(' ').first[0] +
+                  s['name'].toString().split(' ').last[0];
+                  
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 24,
+                          child: Text(
+                            '$rank',
+                            style: const TextStyle(
+                              fontFamily: 'Urbanist',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE8E8E8),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              initials,
+                              style: const TextStyle(
+                                fontFamily: 'Urbanist',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF555555),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                s['name'],
+                                style: const TextStyle(
+                                  fontFamily: 'Urbanist',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                s['section'],
+                                style: const TextStyle(
+                                  fontFamily: 'Urbanist',
+                                  fontSize: 12,
+                                  color: Color(0xFF888888),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          (s['score'] as double).toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (index < gradeStudents.length - 1)
+                    const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                ],
+              );
+            }).toList(),
+          ],
         );
       },
     );

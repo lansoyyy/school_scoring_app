@@ -156,6 +156,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
+      height: 80, // Updated header height
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
@@ -174,10 +175,10 @@ class _StudentsScreenState extends State<StudentsScreen> {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  'STUDENTS',
+                  'SECTIONS',
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
-                    fontSize: 20,
+                    fontSize: 22, // Updated font size
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF1A1A1A),
                   ),

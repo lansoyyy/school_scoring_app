@@ -130,6 +130,7 @@ class _GradesScreenState extends State<GradesScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
+      height: 80, // Updated header height
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
@@ -146,13 +147,15 @@ class _GradesScreenState extends State<GradesScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              const Text(
-                'GRADES',
-                style: TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A1A),
+              const Expanded(
+                child: Text(
+                  'SECTIONS',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 22, // Updated font size
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A1A1A),
+                  ),
                 ),
               ),
             ],
@@ -220,45 +223,89 @@ class _GradesScreenState extends State<GradesScreen> {
     );
   }
 
+  int _selectedYear = 2026;
+
   Widget _buildQuarterTabs() {
     return Container(
       color: Colors.white,
-      child: Row(
-        children: List.generate(4, (i) {
-          final isActive = _selectedQuarter == i + 1;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedQuarter = i + 1),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Text(
-                      'Q${i + 1}',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Urbanist',
-                        fontSize: 14,
-                        fontWeight: isActive
-                            ? FontWeight.w700
-                            : FontWeight.w400,
-                        color: isActive
-                            ? const Color(0xFF1A1A1A)
-                            : const Color(0xFF888888),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    height: 3,
-                    color: isActive
-                        ? const Color(0xFFD4A017)
-                        : Colors.transparent,
-                  ),
-                ],
-              ),
+      child: Column(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildYearTab(2026),
+                _buildYearTab(2025),
+                _buildYearTab(2024),
+              ],
             ),
-          );
-        }),
+          ),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+          Row(
+            children: List.generate(4, (i) {
+              final isActive = _selectedQuarter == i + 1;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedQuarter = i + 1),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          'Q${i + 1}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 14,
+                            fontWeight: isActive
+                                ? FontWeight.w700
+                                : FontWeight.w400,
+                            color: isActive
+                                ? const Color(0xFF1A1A1A)
+                                : const Color(0xFF888888),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: 3,
+                        color: isActive
+                            ? const Color(0xFFD4A017)
+                            : Colors.transparent,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildYearTab(int year) {
+    final isActive = _selectedYear == year;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedYear = year),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isActive ? const Color(0xFF1A1A1A) : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          '$year',
+          style: TextStyle(
+            fontFamily: 'Urbanist',
+            fontSize: 15,
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            color: isActive ? const Color(0xFF1A1A1A) : const Color(0xFF888888),
+          ),
+        ),
       ),
     );
   }

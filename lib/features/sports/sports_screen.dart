@@ -8,9 +8,6 @@ class SportsScreen extends StatefulWidget {
 }
 
 class _SportsScreenState extends State<SportsScreen> {
-  int _selectedDayIndex = 3;
-  final DateTime _baseDate = DateTime(2026, 2, 15);
-
   static const List<Map<String, dynamic>> _allEvents = [
     {
       'day': 0,
@@ -103,14 +100,7 @@ class _SportsScreenState extends State<SportsScreen> {
   ];
 
   List<Map<String, dynamic>> get _todayEvents =>
-      _allEvents.where((e) => e['day'] == _selectedDayIndex).toList();
-
-  static const List<String> _dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-  String _dayName(int offset) {
-    final date = _baseDate.add(Duration(days: offset));
-    return _dayNames[date.weekday % 7];
-  }
+      _allEvents.toList(); // showing combination of all for Current
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +109,6 @@ class _SportsScreenState extends State<SportsScreen> {
       body: Column(
         children: [
           _buildHeader(),
-          _buildWeekCalendar(),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
             child: _todayEvents.isEmpty
@@ -148,7 +137,7 @@ class _SportsScreenState extends State<SportsScreen> {
           child: Row(
             children: [
               const Text(
-                'GAMES',
+                'CURRENT GAMES',
                 style: TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 22,
@@ -165,9 +154,9 @@ class _SportsScreenState extends State<SportsScreen> {
                     color: Color(0xFF555555),
                   ),
                   const SizedBox(width: 6),
-                  Text(
+                  const Text(
                     'February 2026',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Urbanist',
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -179,61 +168,6 @@ class _SportsScreenState extends State<SportsScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildWeekCalendar() {
-    return Container(
-      color: const Color(0xFFF5F5F5),
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-      child: Row(
-        children: List.generate(7, (i) {
-          final date = _baseDate.add(Duration(days: i));
-          final isSelected = _selectedDayIndex == i;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedDayIndex = i),
-              child: Column(
-                children: [
-                  Text(
-                    _dayName(i),
-                    style: TextStyle(
-                      fontFamily: 'Urbanist',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF888888),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFF1A1A1A)
-                          : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${date.day}',
-                        style: TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF1A1A1A),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
       ),
     );
   }
@@ -266,6 +200,12 @@ class _ScheduleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFinal = event['status'] == 'Final';
+    final isLive = event['status'] == 'Live';
+    
+    IconData sportIcon = Icons.sports_basketball;
+    if (event['sport'] == 'Volleyball') sportIcon = Icons.sports_volleyball;
+    if (event['sport'] == 'Football') sportIcon = Icons.sports_soccer;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
@@ -274,25 +214,43 @@ class _ScheduleCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  event['section1'],
-                  style: const TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF5F5F5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(sportIcon, size: 14, color: const Color(0xFF1A1A1A)),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        event['section1'],
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                if (isFinal)
+                if (isFinal || isLive) ...[
+                  const SizedBox(height: 8),
                   Text(
                     event['score1'],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Urbanist',
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A1A1A),
+                      color: isLive ? const Color(0xFFCC0000) : const Color(0xFF1A1A1A),
                     ),
                   ),
+                ],
               ],
             ),
           ),
@@ -308,14 +266,22 @@ class _ScheduleCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                isFinal ? event['status'] : event['date'],
-                style: TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 12,
-                  color: isFinal
-                      ? const Color(0xFFCC0000)
-                      : const Color(0xFF888888),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isLive ? const Color(0xFFFFEBEB) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  isLive ? 'LIVE' : (isFinal ? event['status'] : event['date']),
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 12,
+                    fontWeight: isLive ? FontWeight.w700 : FontWeight.w500,
+                    color: isLive
+                        ? const Color(0xFFCC0000)
+                        : (isFinal ? const Color(0xFF1A1A1A) : const Color(0xFF888888)),
+                  ),
                 ),
               ),
             ],
@@ -324,26 +290,45 @@ class _ScheduleCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  event['section2'],
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        event['section2'],
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF5F5F5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(sportIcon, size: 14, color: const Color(0xFF1A1A1A)),
+                    ),
+                  ],
                 ),
-                if (isFinal)
+                if (isFinal || isLive) ...[
+                  const SizedBox(height: 8),
                   Text(
                     event['score2'],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Urbanist',
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A1A1A),
+                      color: isLive ? const Color(0xFFCC0000) : const Color(0xFF1A1A1A),
                     ),
                   ),
+                ],
               ],
             ),
           ),

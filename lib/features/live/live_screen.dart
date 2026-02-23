@@ -52,30 +52,6 @@ class _LiveScreenState extends State<LiveScreen> {
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           _buildLiveGame(),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          _buildOtherGame(
-            'Grade 9-Rizal',
-            'Grade 9-Bonifacio',
-            '3',
-            '1',
-            'Final',
-          ),
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          _buildOtherGame(
-            'Grade 11-STEM',
-            'Grade 11-ABM',
-            '',
-            '',
-            'Upcoming 1:00 PM',
-          ),
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          _buildOtherGame(
-            'Grade 7-Einstein',
-            'Grade 7-Newton',
-            '',
-            '',
-            'Upcoming 3:00 PM',
-          ),
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
         ],
       ),
     );
@@ -120,160 +96,133 @@ class _LiveScreenState extends State<LiveScreen> {
         '${_minutes.toString().padLeft(2, '0')}:${_seconds.toString().padLeft(2, '0')}';
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      child: Row(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      child: Column(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$_score1',
-                  style: const TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 40,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Icon(
-                  Icons.sports_basketball,
-                  size: 28,
-                  color: Color(0xFFCC0000),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Rockets',
-                  style: TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.sports_basketball,
+                      size: 48,
+                      color: Color(0xFFCC0000),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Rockets',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Text(
-                timer,
+                '$_score1',
                 style: const TextStyle(
                   fontFamily: 'Urbanist',
-                  fontSize: 28,
+                  fontSize: 64,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFF1A1A1A),
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
-                '2nd',
-                style: TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF888888),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  '-',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 48,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFCCCCCC),
+                  ),
                 ),
               ),
-              const SizedBox(height: 6),
-              const Icon(
-                Icons.play_circle_outline,
-                size: 28,
-                color: Color(0xFF888888),
+              Text(
+                '$_score2',
+                style: const TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 64,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.sports_basketball,
+                      size: 48,
+                      color: Color(0xFF1A65CC),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Hornets',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+          const SizedBox(height: 32),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(32),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                const Icon(
+                  Icons.play_circle_outline,
+                  size: 24,
+                  color: Color(0xFFCC0000),
+                ),
+                const SizedBox(width: 8),
                 Text(
-                  '$_score2',
+                  timer,
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
-                    fontSize: 40,
+                    fontSize: 24,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF1A1A1A),
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Icon(
-                  Icons.sports_basketball,
-                  size: 28,
-                  color: Color(0xFF1A65CC),
+                const SizedBox(width: 12),
+                Container(
+                  width: 4,
+                  height: 4,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFCCCCCC),
+                    shape: BoxShape.circle,
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(width: 12),
                 const Text(
-                  'Hornets',
-                  textAlign: TextAlign.right,
+                  '2nd Quarter',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF555555),
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOtherGame(
-    String team1,
-    String team2,
-    String s1,
-    String s2,
-    String status,
-  ) {
-    final isFinal = status == 'Final';
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              team1,
-              style: const TextStyle(
-                fontFamily: 'Urbanist',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1A1A1A),
-              ),
-            ),
-          ),
-          if (isFinal)
-            Text(
-              '$s1 - $s2',
-              style: const TextStyle(
-                fontFamily: 'Urbanist',
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1A1A1A),
-              ),
-            )
-          else
-            Text(
-              status,
-              style: const TextStyle(
-                fontFamily: 'Urbanist',
-                fontSize: 12,
-                color: Color(0xFF888888),
-              ),
-            ),
-          Expanded(
-            child: Text(
-              team2,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontFamily: 'Urbanist',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1A1A1A),
-              ),
             ),
           ),
         ],

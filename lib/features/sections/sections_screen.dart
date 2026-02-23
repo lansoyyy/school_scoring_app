@@ -15,7 +15,7 @@ class _SectionsScreenState extends State<SectionsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -25,6 +25,22 @@ class _SectionsScreenState extends State<SectionsScreen>
   }
 
   static final List<Map<String, dynamic>> _sections = [
+    {
+      'name': 'Prep-Apple',
+      'level': 'PREP',
+      'adviser': 'Ms. Gomez',
+      'count': 25,
+      'color': 0xFFFFB6C1,
+      'logo': 'P-A',
+    },
+    {
+      'name': 'Prep-Orange',
+      'level': 'PREP',
+      'adviser': 'Ms. Lim',
+      'count': 24,
+      'color': 0xFFFFDAB9,
+      'logo': 'P-O',
+    },
     {
       'name': 'Grade 1-Sampaguita',
       'level': 'ELEM',
@@ -233,6 +249,7 @@ class _SectionsScreenState extends State<SectionsScreen>
               indicatorWeight: 3,
               indicatorSize: TabBarIndicatorSize.label,
               tabs: const [
+                Tab(text: 'PREP'),
                 Tab(text: 'ELEM'),
                 Tab(text: 'JHS'),
                 Tab(text: 'SHS'),
@@ -244,6 +261,7 @@ class _SectionsScreenState extends State<SectionsScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
+                _buildSectionList(_byLevel('PREP'), context),
                 _buildSectionList(_byLevel('ELEM'), context),
                 _buildSectionList(_byLevel('JHS'), context),
                 _buildSectionList(_byLevel('SHS'), context),
