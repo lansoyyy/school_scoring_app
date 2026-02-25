@@ -130,7 +130,6 @@ class _GradesScreenState extends State<GradesScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      height: 80, // Updated header height
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,

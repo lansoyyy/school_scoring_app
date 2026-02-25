@@ -184,101 +184,24 @@ class _SportsScreenState extends State<SportsScreen> {
 
   Widget _buildHeader() {
     return Container(
-      height: 80,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 16, 12),
-          child: _isSearching
-              ? Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _isSearching = false;
-                          _searchQuery = '';
-                          _searchController.clear();
-                        });
-                      },
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Color(0xFF1A1A1A),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (v) => setState(() => _searchQuery = v),
-                        autofocus: true,
-                        decoration: const InputDecoration(
-                          hintText: 'Search games...',
-                          border: InputBorder.none,
-                          hintStyle: TextStyle(
-                            fontFamily: 'Urbanist',
-                            color: Color(0xFF888888),
-                          ),
-                        ),
-                        style: const TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    if (_searchQuery.isNotEmpty)
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
-                        },
-                        icon: const Icon(Icons.clear, color: Color(0xFF888888)),
-                      ),
-                  ],
-                )
-              : Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'GAMES',
-                        style: TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1A1A1A),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(() => _isSearching = true),
-                      icon: const Icon(
-                        Icons.search,
-                        size: 24,
-                        color: Color(0xFF555555),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.calendar_today_outlined,
-                          size: 16,
-                          color: Color(0xFF555555),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'February 2026',
-                          style: TextStyle(
-                            fontFamily: 'Urbanist',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF555555),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Row(
+            children: [
+              const Text(
+                'Games',
+                style: TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A1A1A),
                 ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -462,7 +462,7 @@ class _StatsScreenState extends State<StatsScreen>
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           child: const Text(
-            'STATISTICS',
+            'Statistics',
             style: TextStyle(
               fontFamily: 'Urbanist',
               fontSize: 22,
@@ -482,7 +482,7 @@ class _StatsScreenState extends State<StatsScreen>
       final section = s['section'] as String;
       final gradeMatch = RegExp(r'(Grade \d+)').firstMatch(section);
       final grade = gradeMatch != null ? gradeMatch.group(1)! : 'Other';
-      
+
       if (!groupedStudents.containsKey(grade)) {
         groupedStudents[grade] = [];
       }
@@ -504,7 +504,7 @@ class _StatsScreenState extends State<StatsScreen>
       itemBuilder: (context, i) {
         final grade = sortedGrades[i];
         final gradeStudents = groupedStudents[grade]!;
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -526,13 +526,17 @@ class _StatsScreenState extends State<StatsScreen>
               final index = entry.key;
               final s = entry.value;
               final rank = index + 1;
-              final initials = s['name'].toString().split(' ').first[0] +
+              final initials =
+                  s['name'].toString().split(' ').first[0] +
                   s['name'].toString().split(' ').last[0];
-                  
+
               return Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: Row(
                       children: [
                         SizedBox(

@@ -157,7 +157,6 @@ class _StudentsScreenState extends State<StudentsScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      height: 80,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
