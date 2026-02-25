@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen>
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           child: _isSearching
               ? Row(
                   children: [
@@ -193,19 +193,14 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                     const Spacer(),
-                    IconButton(
-                      onPressed: () => setState(() => _isSearching = true),
-                      icon: const Icon(
-                        Icons.search,
-                        size: 24,
-                        color: Color(0xFF555555),
-                      ),
-                    ),
-                    const Icon(
-                      Icons.person_outline,
-                      size: 28,
-                      color: Color(0xFF555555),
-                    ),
+                    // IconButton(
+                    //   onPressed: () => setState(() => _isSearching = true),
+                    //   icon: const Icon(
+                    //     Icons.search,
+                    //     size: 24,
+                    //     color: Color(0xFF555555),
+                    //   ),
+                    // ),
                   ],
                 ),
         ),

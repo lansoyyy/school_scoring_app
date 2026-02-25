@@ -462,7 +462,7 @@ class _StatsScreenState extends State<StatsScreen>
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           child: const Text(
-            'Statistics',
+            'STATISTICS',
             style: TextStyle(
               fontFamily: 'Urbanist',
               fontSize: 22,

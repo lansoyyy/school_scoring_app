@@ -86,6 +86,21 @@ class _LiveScreenState extends State<LiveScreen> {
     super.dispose();
   }
 
+  static const List<Map<String, dynamic>> _allEvents = [
+    {
+      'day': 0,
+      'sport': 'Basketball',
+      'time': '8:00 AM',
+      'date': 'Wed 02/18',
+      'section1': 'Rockets',
+      'section2': 'Hornets',
+      'score1': '22',
+      'score2': '25',
+      'status': 'Live',
+      'venue': 'DSI Gymnasium',
+      'image': 'basketball',
+    },
+  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,13 +110,35 @@ class _LiveScreenState extends State<LiveScreen> {
           _buildHeader(),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _buildLiveGame(),
-                const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                _buildOtherGames(),
-              ],
+            child: _allEvents.isEmpty
+                ? _buildEmpty()
+                : ListView.separated(
+                    padding: EdgeInsets.zero,
+                    itemCount: _allEvents.length,
+                    separatorBuilder: (_, __) =>
+                        const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                    itemBuilder: (context, i) =>
+                        _ScheduleCard(event: _allEvents[i]),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.sports_outlined, size: 56, color: Colors.grey[300]),
+          const SizedBox(height: 12),
+          Text(
+            'No live games',
+            style: TextStyle(
+              fontFamily: 'Urbanist',
+              fontSize: 15,
+              color: Colors.grey[400],
             ),
           ),
         ],
@@ -471,6 +508,396 @@ class _LiveScreenState extends State<LiveScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ScheduleCard extends StatelessWidget {
+  final Map<String, dynamic> event;
+  const _ScheduleCard({required this.event});
+
+  IconData _getSportIcon(String sport) {
+    switch (sport) {
+      case 'Basketball':
+        return Icons.sports_basketball;
+      case 'Volleyball':
+        return Icons.sports_volleyball;
+      case 'Football':
+        return Icons.sports_soccer;
+      default:
+        return Icons.sports;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isFinal = event['status'] == 'Final';
+    final isLive = event['status'] == 'Live';
+    final isFuture = event['status'] == 'Future';
+    final sportIcon = _getSportIcon(event['sport']);
+
+    if (isFinal || !isLive) {
+      // Upcoming game layout
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Row(
+              children: [
+                // Team 1
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F5F5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          sportIcon,
+                          size: 24,
+                          color: const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        event['section1'],
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      if (!isFuture)
+                        Text(
+                          event['score1'],
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 35,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // Center Info (Time and Date)
+                SizedBox(
+                  width: 120,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            size: 14,
+                            color: Color(0xFF888888),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            event['venue'] ?? 'DSI Gymnasium',
+                            style: const TextStyle(
+                              fontFamily: 'Urbanist',
+                              fontSize: 12,
+                              color: Color(0xFF888888),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        event['time'],
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        event['date'],
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF888888),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Team 2
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F5F5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          sportIcon,
+                          size: 24,
+                          color: const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        event['section2'],
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      if (!isFuture)
+                        Text(
+                          event['score2'],
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 35,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+        ],
+      );
+    }
+
+    // Final or Live game layout
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Venue row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.location_on,
+                    size: 14,
+                    color: Color(0xFF888888),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    event['venue'] ?? 'DSI Gymnasium',
+                    style: const TextStyle(
+                      fontFamily: 'Urbanist',
+                      fontSize: 12,
+                      color: Color(0xFF888888),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Teams and Scores
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Team 1
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF5F5F5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            sportIcon,
+                            size: 32,
+                            color: const Color(0xFF1A1A1A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          event['section1'],
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+                        Text(
+                          event['score1'],
+                          style: const TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 36,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Center Info
+                  SizedBox(
+                    width: 100,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        if (isFinal)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5F5F5),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Text(
+                              'FINAL',
+                              style: TextStyle(
+                                fontFamily: 'Urbanist',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1A1A1A),
+                              ),
+                            ),
+                          )
+                        else if (isLive)
+                          Column(
+                            children: [
+                              const Text(
+                                '9:00',
+                                style: TextStyle(
+                                  fontFamily: 'Urbanist',
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFEBEB),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Text(
+                                  'LIVE',
+                                  style: TextStyle(
+                                    fontFamily: 'Urbanist',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFFCC0000),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const VideoPlayerScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: const Color(0xFFCCCCCC),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.play_arrow_rounded,
+                                    size: 20,
+                                    color: Color(0xFF888888),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Team 2
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF5F5F5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            sportIcon,
+                            size: 32,
+                            color: const Color(0xFF1A1A1A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          event['section2'],
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                        if (isFinal || isLive) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            event['score2'],
+                            style: const TextStyle(
+                              fontFamily: 'Urbanist',
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1, color: Color(0xFFEEEEEE)),
+      ],
     );
   }
 }

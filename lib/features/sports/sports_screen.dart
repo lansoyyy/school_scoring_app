@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_scoring_app/features/live/live_screen.dart';
 
 class SportsScreen extends StatefulWidget {
   const SportsScreen({super.key});
@@ -50,9 +51,9 @@ class _SportsScreenState extends State<SportsScreen> {
       'date': 'Mon 02/16',
       'section1': 'Grade 11-STEM',
       'section2': 'Grade 11-ABM',
-      'score1': '',
-      'score2': '',
-      'status': 'Upcoming',
+      'score1': '72',
+      'score2': '68',
+      'status': 'Final',
       'venue': 'DSI Gymnasium',
       'image': 'basketball',
     },
@@ -63,9 +64,9 @@ class _SportsScreenState extends State<SportsScreen> {
       'date': 'Tue 02/17',
       'section1': 'Grade 8-Sampaguita',
       'section2': 'Grade 8-Rosal',
-      'score1': '',
-      'score2': '',
-      'status': 'Upcoming',
+      'score1': '72',
+      'score2': '68',
+      'status': 'Final',
       'venue': 'DSI Covered Court',
       'image': 'volleyball',
     },
@@ -76,8 +77,8 @@ class _SportsScreenState extends State<SportsScreen> {
       'date': 'Wed 02/18',
       'section1': 'Rockets',
       'section2': 'Hornets',
-      'score1': '',
-      'score2': '',
+      'score1': '22',
+      'score2': '25',
       'status': 'Live',
       'venue': 'DSI Gymnasium',
       'image': 'basketball',
@@ -91,7 +92,7 @@ class _SportsScreenState extends State<SportsScreen> {
       'section2': 'Grade 6-Ilang-Ilang',
       'score1': '',
       'score2': '',
-      'status': 'Upcoming',
+      'status': 'Future',
       'venue': 'DSI Football Field',
       'image': 'football',
     },
@@ -104,7 +105,7 @@ class _SportsScreenState extends State<SportsScreen> {
       'section2': 'Grade 12-GAS',
       'score1': '',
       'score2': '',
-      'status': 'Upcoming',
+      'status': 'Future',
       'venue': 'DSI Gymnasium',
       'image': 'basketball',
     },
@@ -117,7 +118,7 @@ class _SportsScreenState extends State<SportsScreen> {
       'section2': 'Grade 5-Adelfa',
       'score1': '',
       'score2': '',
-      'status': 'Upcoming',
+      'status': 'Future',
       'venue': 'DSI Covered Court',
       'image': 'volleyball',
     },
@@ -192,7 +193,7 @@ class _SportsScreenState extends State<SportsScreen> {
           child: Row(
             children: [
               const Text(
-                'Games',
+                'GAMES',
                 style: TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 22,
@@ -304,26 +305,165 @@ class _ScheduleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isFinal = event['status'] == 'Final';
     final isLive = event['status'] == 'Live';
+    final isFuture = event['status'] == 'Future';
     final sportIcon = _getSportIcon(event['sport']);
 
+    if (isFinal || !isLive) {
+      // Upcoming game layout
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Row(
+              children: [
+                // Team 1
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F5F5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          sportIcon,
+                          size: 24,
+                          color: const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        event['section1'],
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      if (!isFuture)
+                        Text(
+                          event['score1'],
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 35,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // Center Info (Time and Date)
+                SizedBox(
+                  width: 120,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            size: 14,
+                            color: Color(0xFF888888),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            event['venue'] ?? 'DSI Gymnasium',
+                            style: const TextStyle(
+                              fontFamily: 'Urbanist',
+                              fontSize: 12,
+                              color: Color(0xFF888888),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        event['time'],
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        event['date'],
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF888888),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Team 2
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F5F5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          sportIcon,
+                          size: 24,
+                          color: const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        event['section2'],
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      if (!isFuture)
+                        Text(
+                          event['score2'],
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 35,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+        ],
+      );
+    }
+
+    // Final or Live game layout
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Game Image
-        Container(
-          width: double.infinity,
-          height: 160,
-          color: const Color(0xFF1A1A1A),
-          child: Center(
-            child: Icon(sportIcon, size: 60, color: const Color(0xFF444444)),
-          ),
-        ),
-        // Game Details
         Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Venue
+              // Venue row
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -346,163 +486,177 @@ class _ScheduleCard extends StatelessWidget {
               const SizedBox(height: 16),
               // Teams and Scores
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Team 1
                   Expanded(
                     child: Column(
                       children: [
                         Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: isLive
-                                ? const Color(0xFFCC0000)
-                                : const Color(0xFFF5F5F5),
+                          width: 64,
+                          height: 64,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF5F5F5),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             sportIcon,
-                            size: 24,
-                            color: isLive
-                                ? Colors.white
-                                : const Color(0xFF1A1A1A),
+                            size: 32,
+                            color: const Color(0xFF1A1A1A),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         Text(
                           event['section1'],
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'Urbanist',
-                            fontSize: 14,
+                            fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF1A1A1A),
                           ),
                         ),
-                        if (isFinal || isLive) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            event['score1'],
-                            style: TextStyle(
-                              fontFamily: 'Urbanist',
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              color: isLive
-                                  ? const Color(0xFFCC0000)
-                                  : const Color(0xFF1A1A1A),
-                            ),
+
+                        const SizedBox(height: 12),
+                        Text(
+                          event['score1'],
+                          style: const TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 36,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A1A1A),
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ),
-                  // VS / Time
-                  Column(
-                    children: [
-                      if (isFinal)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF5F5F5),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'FINAL',
-                            style: TextStyle(
-                              fontFamily: 'Urbanist',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1A1A1A),
+                  // Center Info
+                  SizedBox(
+                    width: 100,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        if (isFinal)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
                             ),
-                          ),
-                        )
-                      else if (isLive)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFEBEB),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'LIVE',
-                            style: TextStyle(
-                              fontFamily: 'Urbanist',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFCC0000),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5F5F5),
+                              borderRadius: BorderRadius.circular(16),
                             ),
+                            child: const Text(
+                              'FINAL',
+                              style: TextStyle(
+                                fontFamily: 'Urbanist',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1A1A1A),
+                              ),
+                            ),
+                          )
+                        else if (isLive)
+                          Column(
+                            children: [
+                              const Text(
+                                '9:00',
+                                style: TextStyle(
+                                  fontFamily: 'Urbanist',
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFEBEB),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Text(
+                                  'LIVE',
+                                  style: TextStyle(
+                                    fontFamily: 'Urbanist',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFFCC0000),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const VideoPlayerScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: const Color(0xFFCCCCCC),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.play_arrow_rounded,
+                                    size: 20,
+                                    color: Color(0xFF888888),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        )
-                      else
-                        Text(
-                          event['time'],
-                          style: const TextStyle(
-                            fontFamily: 'Urbanist',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1A1A),
-                          ),
-                        ),
-                      const SizedBox(height: 4),
-                      Text(
-                        event['date'],
-                        style: const TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 12,
-                          color: Color(0xFF888888),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   // Team 2
                   Expanded(
                     child: Column(
                       children: [
                         Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: isLive
-                                ? const Color(0xFF1A65CC)
-                                : const Color(0xFFF5F5F5),
+                          width: 64,
+                          height: 64,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF5F5F5),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             sportIcon,
-                            size: 24,
-                            color: isLive
-                                ? Colors.white
-                                : const Color(0xFF1A1A1A),
+                            size: 32,
+                            color: const Color(0xFF1A1A1A),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         Text(
                           event['section2'],
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'Urbanist',
-                            fontSize: 14,
+                            fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF1A1A1A),
                           ),
                         ),
                         if (isFinal || isLive) ...[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 12),
                           Text(
                             event['score2'],
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontFamily: 'Urbanist',
-                              fontSize: 28,
+                              fontSize: 36,
                               fontWeight: FontWeight.w800,
-                              color: isLive
-                                  ? const Color(0xFFCC0000)
-                                  : const Color(0xFF1A1A1A),
+                              color: Color(0xFF1A1A1A),
                             ),
                           ),
                         ],

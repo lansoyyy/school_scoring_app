@@ -300,7 +300,7 @@ class _SectionsScreenState extends State<SectionsScreen>
           child: Row(
             children: [
               const Text(
-                'Sections',
+                'SECTIONS',
                 style: TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 22,
