@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -193,14 +194,21 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                     const Spacer(),
-                    // IconButton(
-                    //   onPressed: () => setState(() => _isSearching = true),
-                    //   icon: const Icon(
-                    //     Icons.search,
-                    //     size: 24,
-                    //     color: Color(0xFF555555),
-                    //   ),
-                    // ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                      child: const Icon(
+                        Icons.account_circle_outlined,
+                        size: 30,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
                   ],
                 ),
         ),

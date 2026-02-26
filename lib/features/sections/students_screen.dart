@@ -231,14 +231,6 @@ class _StudentsScreenState extends State<StudentsScreen> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => setState(() => _isSearching = true),
-                      icon: const Icon(
-                        Icons.search,
-                        color: Color(0xFF555555),
-                        size: 22,
-                      ),
-                    ),
                   ],
                 ),
         ),

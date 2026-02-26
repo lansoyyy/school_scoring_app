@@ -72,14 +72,6 @@ class _GradesScreenState extends State<GradesScreen> {
 
   List<int> get _currentGrades => _gradesData[_selectedQuarter];
 
-  String _gradeLabel(int grade) {
-    if (grade >= 90) return 'Outstanding';
-    if (grade >= 85) return 'Very Satisfactory';
-    if (grade >= 80) return 'Satisfactory';
-    if (grade >= 75) return 'Fairly Satisfactory';
-    return 'Did Not Meet';
-  }
-
   Color _gradeColor(int grade) {
     if (grade >= 90) return const Color(0xFF10B981);
     if (grade >= 85) return const Color(0xFF4A90E2);
@@ -97,6 +89,7 @@ class _GradesScreenState extends State<GradesScreen> {
           _buildHeader(context),
           _buildStudentInfo(),
           _buildQuarterTabs(),
+          _buildGWARow(),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
             child: ListView.separated(
@@ -277,6 +270,94 @@ class _GradesScreenState extends State<GradesScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  double get _gwa {
+    final grades = _currentGrades;
+    return grades.reduce((a, b) => a + b) / grades.length;
+  }
+
+  Widget _buildGWARow() {
+    return Container(
+      color: const Color(0xFFF5F5F5),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          // Link Image
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE8E8E8),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.link, size: 20, color: Color(0xFF888888)),
+          ),
+          const SizedBox(width: 12),
+          // Period and Remarks
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'June - August',
+                  style: const TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Good',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 12,
+                    color: _gradeColor(_gwa.round()),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // GWA
+          Row(
+            children: [
+              const Text(
+                'GWA',
+                style: TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 13,
+                  color: Color(0xFF888888),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _gwa.toStringAsFixed(2),
+                style: const TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          // Rank
+          Text(
+            'Rank #${widget.student['rank']}',
+            style: const TextStyle(
+              fontFamily: 'Urbanist',
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+        ],
       ),
     );
   }

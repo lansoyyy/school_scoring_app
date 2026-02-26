@@ -691,27 +691,6 @@ class _ScheduleCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Venue row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.location_on,
-                    size: 14,
-                    color: Color(0xFF888888),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    event['venue'] ?? 'DSI Gymnasium',
-                    style: const TextStyle(
-                      fontFamily: 'Urbanist',
-                      fontSize: 12,
-                      color: Color(0xFF888888),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
               // Teams and Scores
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -760,7 +739,7 @@ class _ScheduleCard extends StatelessWidget {
                   ),
                   // Center Info
                   SizedBox(
-                    width: 100,
+                    width: 110,
                     child: Column(
                       children: [
                         const SizedBox(height: 12),
@@ -787,6 +766,27 @@ class _ScheduleCard extends StatelessWidget {
                         else if (isLive)
                           Column(
                             children: [
+                              // Venue row
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.location_on,
+                                    size: 14,
+                                    color: Color(0xFF888888),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    event['venue'] ?? 'DSI Gymnasium',
+                                    style: const TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 12,
+                                      color: Color(0xFF888888),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
                               const Text(
                                 '9:00',
                                 style: TextStyle(

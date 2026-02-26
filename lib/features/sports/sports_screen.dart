@@ -146,9 +146,37 @@ class _SportsScreenState extends State<SportsScreen> {
         .toList();
   }
 
-  List<String> get _weekDays => ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  List<String> get _weekDays => [
+    'S',
+    'M',
+    'T',
+    'W',
+    'T',
+    'F',
+    'S',
+    'S',
+    'M',
+    'T',
+    'W',
+    'T',
+    'F',
+  ];
 
-  List<int> get _weekDates => [15, 16, 17, 18, 19, 20, 21];
+  List<int> get _weekDates => [
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+  ];
 
   @override
   void dispose() {
@@ -212,53 +240,61 @@ class _SportsScreenState extends State<SportsScreen> {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(7, (index) {
-          final isSelected = index == _selectedDayIndex;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedDayIndex = index),
-            child: Column(
-              children: [
-                Text(
-                  _weekDays[index],
-                  style: TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isSelected
-                        ? const Color(0xFF1A1A1A)
-                        : const Color(0xFF888888),
-                  ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: List.generate(_weekDates.length, (index) {
+            final isSelected = index == _selectedDayIndex;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedDayIndex = index),
+              child: Container(
+                margin: EdgeInsets.only(
+                  right: index < _weekDates.length - 1 ? 24 : 0,
                 ),
-                const SizedBox(height: 8),
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFF1A1A1A)
-                        : Colors.transparent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${_weekDates[index]}',
+                child: Column(
+                  children: [
+                    Text(
+                      _weekDays[index],
                       style: TextStyle(
                         fontFamily: 'Urbanist',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                         color: isSelected
-                            ? Colors.white
-                            : const Color(0xFF1A1A1A),
+                            ? const Color(0xFF1A1A1A)
+                            : const Color(0xFF888888),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFF1A1A1A)
+                            : Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${_weekDates[index]}',
+                          style: TextStyle(
+                            fontFamily: 'Urbanist',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected
+                                ? Colors.white
+                                : const Color(0xFF1A1A1A),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        }),
+              ),
+            );
+          }),
+        ),
       ),
     );
   }
@@ -360,7 +396,7 @@ class _ScheduleCard extends StatelessWidget {
                 ),
                 // Center Info (Time and Date)
                 SizedBox(
-                  width: 120,
+                  width: 125,
                   child: Column(
                     children: [
                       Row(
@@ -402,6 +438,55 @@ class _ScheduleCard extends StatelessWidget {
                           color: Color(0xFF888888),
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      if (isFinal)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF5F5F5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'FINAL',
+                            style: TextStyle(
+                              fontFamily: 'Urbanist',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      if (!isFuture)
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const VideoPlayerScreen(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFCCCCCC),
+                                width: 2,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.play_arrow_rounded,
+                              size: 20,
+                              color: Color(0xFF888888),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -458,43 +543,23 @@ class _ScheduleCard extends StatelessWidget {
     // Final or Live game layout
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Venue row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.location_on,
-                    size: 14,
-                    color: Color(0xFF888888),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    event['venue'] ?? 'DSI Gymnasium',
-                    style: const TextStyle(
-                      fontFamily: 'Urbanist',
-                      fontSize: 12,
-                      color: Color(0xFF888888),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Teams and Scores
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Team 1
                   Expanded(
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Container(
-                          width: 64,
-                          height: 64,
+                          width: 48,
+                          height: 48,
                           decoration: const BoxDecoration(
                             color: Color(0xFFF5F5F5),
                             shape: BoxShape.circle,
@@ -532,9 +597,29 @@ class _ScheduleCard extends StatelessWidget {
                   ),
                   // Center Info
                   SizedBox(
-                    width: 100,
+                    width: 120,
                     child: Column(
                       children: [
+                        // Venue row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.location_on,
+                              size: 14,
+                              color: Color(0xFF888888),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              event['venue'] ?? 'DSI Gymnasium',
+                              style: const TextStyle(
+                                fontFamily: 'Urbanist',
+                                fontSize: 12,
+                                color: Color(0xFF888888),
+                              ),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 12),
                         if (isFinal)
                           Container(
@@ -625,8 +710,8 @@ class _ScheduleCard extends StatelessWidget {
                     child: Column(
                       children: [
                         Container(
-                          width: 64,
-                          height: 64,
+                          width: 48,
+                          height: 48,
                           decoration: const BoxDecoration(
                             color: Color(0xFFF5F5F5),
                             shape: BoxShape.circle,
