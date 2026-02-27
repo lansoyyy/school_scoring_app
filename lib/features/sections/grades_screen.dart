@@ -144,7 +144,7 @@ class _GradesScreenState extends State<GradesScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 16, 12),
+          padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
           child: Row(
             children: [
               IconButton(

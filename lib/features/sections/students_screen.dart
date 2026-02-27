@@ -161,23 +161,11 @@ class _StudentsScreenState extends State<StudentsScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 16, 12),
+          padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
           child: _isSearching
               ? Row(
                   children: [
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _isSearching = false;
-                          _searchQuery = '';
-                          _searchCtrl.clear();
-                        });
-                      },
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Color(0xFF1A1A1A),
-                      ),
-                    ),
+                    Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
                     Expanded(
                       child: TextField(
                         controller: _searchCtrl,
