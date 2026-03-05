@@ -1,5 +1,61 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:school_scoring_app/features/live/live_screen.dart';
+import 'package:http/http.dart' as http;
+import 'package:school_scoring_app/core/constants/app_constants.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class GameItem {
+  final int id;
+  final String glink;
+  final String eventPlace;
+  final String gameDate;
+  final String gameTime;
+  final String team1;
+  final String team2;
+  final String team1Score;
+  final String team2Score;
+  final String timeRem;
+  final String gameQtr;
+  final String team1Pic;
+  final String team2Pic;
+  final String gameStatus;
+
+  GameItem({
+    required this.id,
+    required this.glink,
+    required this.eventPlace,
+    required this.gameDate,
+    required this.gameTime,
+    required this.team1,
+    required this.team2,
+    required this.team1Score,
+    required this.team2Score,
+    required this.timeRem,
+    required this.gameQtr,
+    required this.team1Pic,
+    required this.team2Pic,
+    required this.gameStatus,
+  });
+
+  factory GameItem.fromJson(Map<String, dynamic> json) {
+    return GameItem(
+      id: json['id'] as int,
+      glink: json['glink'] as String? ?? '',
+      eventPlace: json['event_place'] as String,
+      gameDate: json['game_date'] as String,
+      gameTime: json['game_time'] as String,
+      team1: json['team1'] as String,
+      team2: json['team2'] as String,
+      team1Score: json['team1_score'] as String? ?? '',
+      team2Score: json['team2_score'] as String? ?? '',
+      timeRem: json['time_rem'] as String? ?? '',
+      gameQtr: json['game_qtr'] as String? ?? '',
+      team1Pic: json['team1_pic'] as String,
+      team2Pic: json['team2_pic'] as String,
+      gameStatus: json['game_status'] as String,
+    );
+  }
+}
 
 class SportsScreen extends StatefulWidget {
   const SportsScreen({super.key});
@@ -14,134 +70,29 @@ class _SportsScreenState extends State<SportsScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
   String _searchQuery = '';
+  List<GameItem> _allGames = [];
+  bool _isLoadingGames = true;
+  String? _selectedDate;
 
-  static const List<Map<String, dynamic>> _allEvents = [
-    // Finished games (Feb 15, day 0)
-    {
-      'day': 0,
-      'sport': 'Basketball',
-      'time': '8:00 AM',
-      'date': 'Sun 02/15',
-      'section1': 'Saint Claire',
-      'section2': 'Saint Mark',
-      'score1': '72',
-      'score2': '68',
-      'status': 'Final',
-      'venue': 'DSI Gymnasium',
-      'image': 'basketball',
-    },
-    {
-      'day': 0,
-      'sport': 'Volleyball',
-      'time': '10:00 AM',
-      'date': 'Sun 02/15',
-      'section1': 'Grade 9-Rizal',
-      'section2': 'Grade 9-Bonifacio',
-      'score1': '3',
-      'score2': '1',
-      'status': 'Final',
-      'venue': 'DSI Covered Court',
-      'image': 'volleyball',
-    },
-    // Future games (Feb 16-21)
-    {
-      'day': 1,
-      'sport': 'Basketball',
-      'time': '9:00 AM',
-      'date': 'Mon 02/16',
-      'section1': 'Grade 11-STEM',
-      'section2': 'Grade 11-ABM',
-      'score1': '72',
-      'score2': '68',
-      'status': 'Final',
-      'venue': 'DSI Gymnasium',
-      'image': 'basketball',
-    },
-    {
-      'day': 2,
-      'sport': 'Volleyball',
-      'time': '8:30 AM',
-      'date': 'Tue 02/17',
-      'section1': 'Grade 8-Sampaguita',
-      'section2': 'Grade 8-Rosal',
-      'score1': '72',
-      'score2': '68',
-      'status': 'Final',
-      'venue': 'DSI Covered Court',
-      'image': 'volleyball',
-    },
-    {
-      'day': 3,
-      'sport': 'Basketball',
-      'time': '8:00 AM',
-      'date': 'Wed 02/18',
-      'section1': 'Rockets',
-      'section2': 'Hornets',
-      'score1': '22',
-      'score2': '25',
-      'status': 'Live',
-      'venue': 'DSI Gymnasium',
-      'image': 'basketball',
-    },
-    {
-      'day': 4,
-      'sport': 'Football',
-      'time': '2:00 PM',
-      'date': 'Thu 02/19',
-      'section1': 'Grade 6-Sampaguita',
-      'section2': 'Grade 6-Ilang-Ilang',
-      'score1': '',
-      'score2': '',
-      'status': 'Future',
-      'venue': 'DSI Football Field',
-      'image': 'football',
-    },
-    {
-      'day': 5,
-      'sport': 'Basketball',
-      'time': '9:00 AM',
-      'date': 'Fri 02/20',
-      'section1': 'Grade 12-HUMSS',
-      'section2': 'Grade 12-GAS',
-      'score1': '',
-      'score2': '',
-      'status': 'Future',
-      'venue': 'DSI Gymnasium',
-      'image': 'basketball',
-    },
-    {
-      'day': 6,
-      'sport': 'Volleyball',
-      'time': '10:00 AM',
-      'date': 'Sat 02/21',
-      'section1': 'Grade 5-Jasmine',
-      'section2': 'Grade 5-Adelfa',
-      'score1': '',
-      'score2': '',
-      'status': 'Future',
-      'venue': 'DSI Covered Court',
-      'image': 'volleyball',
-    },
-  ];
+  List<GameItem> get _todayEvents {
+    if (_selectedDate != null) {
+      return _allGames.where((g) => g.gameDate == _selectedDate).toList();
+    }
+    // Get date for selected day index
+    final selectedDate = _baseDate.add(Duration(days: _selectedDayIndex));
+    final formattedDate =
+        '${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}-${selectedDate.year}';
+    return _allGames.where((g) => g.gameDate == formattedDate).toList();
+  }
 
-  List<Map<String, dynamic>> get _todayEvents =>
-      _allEvents.where((e) => e['day'] == _selectedDayIndex).toList();
-
-  List<Map<String, dynamic>> get _filteredEvents {
+  List<GameItem> get _filteredEvents {
     final events = _todayEvents;
     if (_searchQuery.isEmpty) return events;
     return events
         .where(
           (e) =>
-              e['section1']!.toString().toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ) ||
-              e['section2']!.toString().toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ) ||
-              e['sport']!.toString().toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ),
+              e.team1.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              e.team2.toLowerCase().contains(_searchQuery.toLowerCase()),
         )
         .toList();
   }
@@ -179,6 +130,42 @@ class _SportsScreenState extends State<SportsScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _fetchGames();
+  }
+
+  Future<void> _fetchGames({String? date}) async {
+    try {
+      String url = '${AppConstants.apiBaseUrl}/game';
+      if (date != null) {
+        url += '?date=$date';
+      }
+
+      final response = await http
+          .get(Uri.parse(url))
+          .timeout(
+            const Duration(milliseconds: AppConstants.connectionTimeout),
+          );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          _allGames = data.map((item) => GameItem.fromJson(item)).toList();
+          _isLoadingGames = false;
+          if (date != null) {
+            _selectedDate = date;
+          }
+        });
+      } else {
+        setState(() => _isLoadingGames = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingGames = false);
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -195,15 +182,18 @@ class _SportsScreenState extends State<SportsScreen> {
           _buildWeekCalendar(),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
-            child: events.isEmpty
+            child: _isLoadingGames
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+                  )
+                : events.isEmpty
                 ? _buildEmpty()
-                : ListView.separated(
+                : ListView.builder(
                     padding: EdgeInsets.zero,
                     itemCount: events.length,
-                    separatorBuilder: (_, __) =>
-                        const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                    itemBuilder: (context, i) =>
-                        _ScheduleCard(event: events[i]),
+                    itemBuilder: (context, index) {
+                      return _ScheduleCard(game: events[index]);
+                    },
                   ),
           ),
         ],
@@ -217,18 +207,61 @@ class _SportsScreenState extends State<SportsScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
               const Text(
-                'GAMES',
+                'Sports Schedule',
                 style: TextStyle(
                   fontFamily: 'Urbanist',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
                   color: Color(0xFF1A1A1A),
                 ),
               ),
+              const Spacer(),
+              if (!_isSearching)
+                IconButton(
+                  onPressed: () {
+                    setState(() => _isSearching = true);
+                  },
+                  icon: const Icon(Icons.search, color: Color(0xFF1A1A1A)),
+                )
+              else
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _isSearching = false;
+                          _searchQuery = '';
+                          _searchController.clear();
+                        });
+                      },
+                      icon: const Icon(Icons.close, color: Color(0xFF1A1A1A)),
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          hintText: 'Search games...',
+                          border: InputBorder.none,
+                          hintStyle: TextStyle(
+                            fontFamily: 'Urbanist',
+                            color: Color(0xFF888888),
+                          ),
+                        ),
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -247,7 +280,17 @@ class _SportsScreenState extends State<SportsScreen> {
           children: List.generate(_weekDates.length, (index) {
             final isSelected = index == _selectedDayIndex;
             return GestureDetector(
-              onTap: () => setState(() => _selectedDayIndex = index),
+              onTap: () {
+                setState(() {
+                  _selectedDayIndex = index;
+                  _selectedDate = null;
+                });
+                // Fetch games for selected date
+                final selectedDate = _baseDate.add(Duration(days: index));
+                final formattedDateForApi =
+                    '${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}-${selectedDate.year}';
+                _fetchGames(date: formattedDateForApi);
+              },
               child: Container(
                 margin: EdgeInsets.only(
                   right: index < _weekDates.length - 1 ? 24 : 0,
@@ -321,28 +364,14 @@ class _SportsScreenState extends State<SportsScreen> {
 }
 
 class _ScheduleCard extends StatelessWidget {
-  final Map<String, dynamic> event;
-  const _ScheduleCard({required this.event});
-
-  IconData _getSportIcon(String sport) {
-    switch (sport) {
-      case 'Basketball':
-        return Icons.sports_basketball;
-      case 'Volleyball':
-        return Icons.sports_volleyball;
-      case 'Football':
-        return Icons.sports_soccer;
-      default:
-        return Icons.sports;
-    }
-  }
+  final GameItem game;
+  const _ScheduleCard({required this.game});
 
   @override
   Widget build(BuildContext context) {
-    final isFinal = event['status'] == 'Final';
-    final isLive = event['status'] == 'Live';
-    final isFuture = event['status'] == 'Future';
-    final sportIcon = _getSportIcon(event['sport']);
+    final isFinal = game.gameStatus == 'past';
+    final isLive = game.gameStatus == 'live';
+    final isFuture = game.gameStatus == 'future';
 
     if (isFinal || !isLive) {
       // Upcoming game layout
@@ -363,15 +392,25 @@ class _ScheduleCard extends StatelessWidget {
                           color: Color(0xFFF5F5F5),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          sportIcon,
-                          size: 24,
-                          color: const Color(0xFF1A1A1A),
+                        child: ClipOval(
+                          child: Image.network(
+                            game.team1Pic,
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.sports_basketball,
+                                size: 24,
+                                color: Color(0xFF1A1A1A),
+                              );
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        event['section1'],
+                        game.team1,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontFamily: 'Urbanist',
@@ -382,7 +421,7 @@ class _ScheduleCard extends StatelessWidget {
                       ),
                       if (!isFuture)
                         Text(
-                          event['score1'],
+                          game.team1Score,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'Urbanist',
@@ -409,7 +448,7 @@ class _ScheduleCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            event['venue'] ?? 'DSI Gymnasium',
+                            game.eventPlace,
                             style: const TextStyle(
                               fontFamily: 'Urbanist',
                               fontSize: 12,
@@ -420,7 +459,7 @@ class _ScheduleCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        event['time'],
+                        game.gameTime,
                         style: const TextStyle(
                           fontFamily: 'Urbanist',
                           fontSize: 16,
@@ -430,7 +469,7 @@ class _ScheduleCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        event['date'],
+                        game.gameDate,
                         style: const TextStyle(
                           fontFamily: 'Urbanist',
                           fontSize: 12,
@@ -460,15 +499,16 @@ class _ScheduleCard extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(height: 16),
-                      if (!isFuture)
+                      if (!isFuture && game.glink.isNotEmpty)
                         GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const VideoPlayerScreen(),
-                              ),
-                            );
+                          onTap: () async {
+                            final Uri url = Uri.parse(game.glink);
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(
+                                url,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            }
                           },
                           child: Container(
                             width: 32,
@@ -501,15 +541,25 @@ class _ScheduleCard extends StatelessWidget {
                           color: Color(0xFFF5F5F5),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          sportIcon,
-                          size: 24,
-                          color: const Color(0xFF1A1A1A),
+                        child: ClipOval(
+                          child: Image.network(
+                            game.team2Pic,
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.sports_basketball,
+                                size: 24,
+                                color: Color(0xFF1A1A1A),
+                              );
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        event['section2'],
+                        game.team2,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontFamily: 'Urbanist',
@@ -520,7 +570,7 @@ class _ScheduleCard extends StatelessWidget {
                       ),
                       if (!isFuture)
                         Text(
-                          event['score2'],
+                          game.team2Score,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'Urbanist',
@@ -564,15 +614,25 @@ class _ScheduleCard extends StatelessWidget {
                             color: Color(0xFFF5F5F5),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            sportIcon,
-                            size: 32,
-                            color: const Color(0xFF1A1A1A),
+                          child: ClipOval(
+                            child: Image.network(
+                              game.team1Pic,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(
+                                  Icons.sports_basketball,
+                                  size: 32,
+                                  color: Color(0xFF1A1A1A),
+                                );
+                              },
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          event['section1'],
+                          game.team1,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'Urbanist',
@@ -584,7 +644,7 @@ class _ScheduleCard extends StatelessWidget {
 
                         const SizedBox(height: 12),
                         Text(
-                          event['score1'],
+                          game.team1Score,
                           style: const TextStyle(
                             fontFamily: 'Urbanist',
                             fontSize: 36,
@@ -611,7 +671,7 @@ class _ScheduleCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              event['venue'] ?? 'DSI Gymnasium',
+                              game.eventPlace,
                               style: const TextStyle(
                                 fontFamily: 'Urbanist',
                                 fontSize: 12,
@@ -644,9 +704,9 @@ class _ScheduleCard extends StatelessWidget {
                         else if (isLive)
                           Column(
                             children: [
-                              const Text(
-                                '9:00',
-                                style: TextStyle(
+                              Text(
+                                game.timeRem,
+                                style: const TextStyle(
                                   fontFamily: 'Urbanist',
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
@@ -674,32 +734,34 @@ class _ScheduleCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const VideoPlayerScreen(),
+                              if (game.glink.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () async {
+                                    final Uri url = Uri.parse(game.glink);
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(
+                                        url,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: const Color(0xFFCCCCCC),
+                                        width: 2,
+                                      ),
                                     ),
-                                  );
-                                },
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: const Color(0xFFCCCCCC),
-                                      width: 2,
+                                    child: const Icon(
+                                      Icons.play_arrow_rounded,
+                                      size: 20,
+                                      color: Color(0xFF888888),
                                     ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.play_arrow_rounded,
-                                    size: 20,
-                                    color: Color(0xFF888888),
                                   ),
                                 ),
-                              ),
                             ],
                           ),
                       ],
@@ -716,15 +778,25 @@ class _ScheduleCard extends StatelessWidget {
                             color: Color(0xFFF5F5F5),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            sportIcon,
-                            size: 32,
-                            color: const Color(0xFF1A1A1A),
+                          child: ClipOval(
+                            child: Image.network(
+                              game.team2Pic,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(
+                                  Icons.sports_basketball,
+                                  size: 32,
+                                  color: Color(0xFF1A1A1A),
+                                );
+                              },
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          event['section2'],
+                          game.team2,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'Urbanist',
@@ -736,7 +808,7 @@ class _ScheduleCard extends StatelessWidget {
                         if (isFinal || isLive) ...[
                           const SizedBox(height: 12),
                           Text(
-                            event['score2'],
+                            game.team2Score,
                             style: const TextStyle(
                               fontFamily: 'Urbanist',
                               fontSize: 36,

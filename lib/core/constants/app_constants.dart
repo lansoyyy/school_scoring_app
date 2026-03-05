@@ -53,6 +53,7 @@ class AppConstants {
   static const String keyLanguage = 'language';
 
   // API Constants
+  static const String apiBaseUrl = 'http://93.127.140.225:8082/DSI';
   static const int connectionTimeout = 30000;
   static const int receiveTimeout = 30000;
   static const int sendTimeout = 30000;

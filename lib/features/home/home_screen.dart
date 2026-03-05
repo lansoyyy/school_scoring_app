@@ -1,5 +1,67 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../../core/constants/app_constants.dart';
 import 'settings_screen.dart';
+
+class NewsItem {
+  final int id;
+  final String title;
+  final String nlink;
+  final String postDate;
+  final String details;
+
+  NewsItem({
+    required this.id,
+    required this.title,
+    required this.nlink,
+    required this.postDate,
+    required this.details,
+  });
+
+  factory NewsItem.fromJson(Map<String, dynamic> json) {
+    return NewsItem(
+      id: json['id'] as int,
+      title: json['title'] as String,
+      nlink: json['nlink'] as String,
+      postDate: json['postDate'] as String,
+      details: json['details'] as String,
+    );
+  }
+}
+
+class StandingItem {
+  final int id;
+  final String slink;
+  final String name;
+  final String teamName;
+  final String standing;
+
+  StandingItem({
+    required this.id,
+    required this.slink,
+    required this.name,
+    required this.teamName,
+    required this.standing,
+  });
+
+  factory StandingItem.fromJson(Map<String, dynamic> json) {
+    return StandingItem(
+      id: json['id'] as int,
+      slink: json['slink'] as String,
+      name: json['name'] as String,
+      teamName: json['team_name'] as String,
+      standing: json['standing'] as String,
+    );
+  }
+}
+
+class GradeStandings {
+  final String grade;
+  final List<StandingItem> teams;
+
+  GradeStandings({required this.grade, required this.teams});
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,8 +76,12 @@ class _HomeScreenState extends State<HomeScreen>
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
   String _searchQuery = '';
+  List<NewsItem> _news = [];
+  bool _isLoadingNews = true;
+  List<GradeStandings> _standings = [];
+  bool _isLoadingStandings = true;
 
-  static const List<Map<String, String>> _news = [
+  static const List<Map<String, String>> _fallbackNews = [
     {
       'title': 'DSI Basketball Team Wins Regional Championship',
       'date': 'February 18, 2026',
@@ -64,6 +130,72 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _fetchNews();
+    _fetchStandings();
+  }
+
+  Future<void> _fetchNews() async {
+    try {
+      final response = await http
+          .get(Uri.parse('${AppConstants.apiBaseUrl}/latest'))
+          .timeout(
+            const Duration(milliseconds: AppConstants.connectionTimeout),
+          );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          _news = data.map((item) => NewsItem.fromJson(item)).toList();
+          _isLoadingNews = false;
+        });
+      } else {
+        setState(() => _isLoadingNews = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingNews = false);
+    }
+  }
+
+  Future<void> _fetchStandings() async {
+    try {
+      final response = await http
+          .get(Uri.parse('${AppConstants.apiBaseUrl}/standings'))
+          .timeout(
+            const Duration(milliseconds: AppConstants.connectionTimeout),
+          );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        final List<GradeStandings> standingsList = [];
+
+        for (var gradeData in data) {
+          if (gradeData is List && gradeData.isNotEmpty) {
+            final gradeInfo = gradeData[0] as Map<String, dynamic>;
+            final grade = gradeInfo['grade'] as String;
+            final teams = <StandingItem>[];
+
+            for (int i = 1; i < gradeData.length; i++) {
+              if (gradeData[i] is Map<String, dynamic>) {
+                teams.add(
+                  StandingItem.fromJson(gradeData[i] as Map<String, dynamic>),
+                );
+              }
+            }
+
+            standingsList.add(GradeStandings(grade: grade, teams: teams));
+          }
+        }
+
+        setState(() {
+          _standings = standingsList;
+          _isLoadingStandings = false;
+        });
+      } else {
+        setState(() => _isLoadingStandings = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingStandings = false);
+    }
   }
 
   @override
@@ -216,19 +348,37 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  List<Map<String, String>> get _filteredNews {
+  List<NewsItem> get _filteredNews {
     if (_searchQuery.isEmpty) return _news;
     return _news
         .where(
           (n) =>
-              n['title']!.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              n['desc']!.toLowerCase().contains(_searchQuery.toLowerCase()),
+              n.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              n.details.toLowerCase().contains(_searchQuery.toLowerCase()),
         )
         .toList();
   }
 
   Widget _buildLatestTab() {
+    if (_isLoadingNews) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+      );
+    }
+
     final news = _isSearching ? _filteredNews : _news;
+    if (news.isEmpty) {
+      return const Center(
+        child: Text(
+          'No news available',
+          style: TextStyle(
+            fontFamily: 'Urbanist',
+            fontSize: 16,
+            color: Color(0xFF888888),
+          ),
+        ),
+      );
+    }
     return ListView.builder(
       padding: EdgeInsets.zero,
       itemCount: news.length,
@@ -240,43 +390,30 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildStandingsTab() {
-    final standings = [
-      {'section': 'Grade 12-STEM', 'pts': '96.2', 'rank': '1'},
-      {'section': 'Grade 11-STEM', 'pts': '97.5', 'rank': '1'},
-      {'section': 'Grade 11-ABM', 'pts': '95.7', 'rank': '2'},
-      {'section': 'Grade 10-Aguinaldo', 'pts': '96.8', 'rank': '1'},
-      {'section': 'Grade 10-Mabini', 'pts': '95.1', 'rank': '2'},
-      {'section': 'Grade 9-Rizal', 'pts': '94.6', 'rank': '1'},
-    ];
-
-    // Group standings by grade
-    final groupedStandings = <String, List<Map<String, String>>>{};
-    for (var s in standings) {
-      final section = s['section'] as String;
-      final gradeMatch = RegExp(r'(Grade \d+)').firstMatch(section);
-      final grade = gradeMatch != null ? gradeMatch.group(1)! : 'Other';
-
-      if (!groupedStandings.containsKey(grade)) {
-        groupedStandings[grade] = [];
-      }
-      groupedStandings[grade]!.add(s);
+    if (_isLoadingStandings) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+      );
     }
 
-    final sortedGrades = groupedStandings.keys.toList()
-      ..sort((a, b) {
-        if (a == 'Other') return 1;
-        if (b == 'Other') return -1;
-        final numA = int.parse(a.split(' ')[1]);
-        final numB = int.parse(b.split(' ')[1]);
-        return numB.compareTo(numA); // Descending order
-      });
+    if (_standings.isEmpty) {
+      return const Center(
+        child: Text(
+          'No standings available',
+          style: TextStyle(
+            fontFamily: 'Urbanist',
+            fontSize: 16,
+            color: Color(0xFF888888),
+          ),
+        ),
+      );
+    }
 
     return ListView.builder(
       padding: EdgeInsets.zero,
-      itemCount: sortedGrades.length,
+      itemCount: _standings.length,
       itemBuilder: (context, i) {
-        final grade = sortedGrades[i];
-        final gradeStandings = groupedStandings[grade]!;
+        final gradeStanding = _standings[i];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               color: const Color(0xFFF5F5F5),
               child: Text(
-                grade,
+                gradeStanding.grade,
                 style: const TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 14,
@@ -295,13 +432,12 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
             ),
-            ...gradeStandings.asMap().entries.map((entry) {
+            ...gradeStanding.teams.asMap().entries.map((entry) {
               final index = entry.key;
-              final s = entry.value;
-              final sectionName = s['section']!;
+              final team = entry.value;
               final initials =
-                  sectionName.split('-').first.split(' ').last[0] +
-                  sectionName.split('-').last[0];
+                  team.name.split(' ').first[0] +
+                  team.teamName.split(' ').first[0];
 
               return Column(
                 children: [
@@ -312,11 +448,11 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                     child: Row(
                       children: [
-                        // Rank
+                        // Rank (index + 1)
                         SizedBox(
                           width: 28,
                           child: Text(
-                            s['rank']!,
+                            '${index + 1}',
                             style: const TextStyle(
                               fontFamily: 'Urbanist',
                               fontSize: 16,
@@ -326,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         ),
                         const SizedBox(width: 12),
-                        // Section Avatar
+                        // Team Avatar (with image)
                         Container(
                           width: 44,
                           height: 44,
@@ -334,26 +470,36 @@ class _HomeScreenState extends State<HomeScreen>
                             color: Color(0xFFE8E8E8),
                             shape: BoxShape.circle,
                           ),
-                          child: Center(
-                            child: Text(
-                              initials,
-                              style: const TextStyle(
-                                fontFamily: 'Urbanist',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF555555),
-                              ),
+                          child: ClipOval(
+                            child: Image.network(
+                              team.slink,
+                              width: 44,
+                              height: 44,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Center(
+                                  child: Text(
+                                    initials,
+                                    style: const TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF555555),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ),
                         const SizedBox(width: 12),
-                        // Section Name and Record
+                        // Team Name and Record
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                sectionName,
+                                '${team.name} - ${team.teamName}',
                                 style: const TextStyle(
                                   fontFamily: 'Urbanist',
                                   fontSize: 15,
@@ -362,9 +508,9 @@ class _HomeScreenState extends State<HomeScreen>
                                 ),
                               ),
                               const SizedBox(height: 2),
-                              const Text(
-                                '10-1',
-                                style: TextStyle(
+                              Text(
+                                team.standing,
+                                style: const TextStyle(
                                   fontFamily: 'Urbanist',
                                   fontSize: 13,
                                   color: Color(0xFF888888),
@@ -373,20 +519,10 @@ class _HomeScreenState extends State<HomeScreen>
                             ],
                           ),
                         ),
-                        // Points
-                        Text(
-                          s['pts']!,
-                          style: const TextStyle(
-                            fontFamily: 'Urbanist',
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1A1A),
-                          ),
-                        ),
                       ],
                     ),
                   ),
-                  if (index < gradeStandings.length - 1)
+                  if (index < gradeStanding.teams.length - 1)
                     const Divider(height: 1, color: Color(0xFFEEEEEE)),
                 ],
               );
@@ -399,27 +535,8 @@ class _HomeScreenState extends State<HomeScreen>
 }
 
 class _NewsCard extends StatelessWidget {
-  final Map<String, String> news;
+  final NewsItem news;
   const _NewsCard({required this.news});
-
-  IconData _getIcon(String? type) {
-    switch (type) {
-      case 'basketball':
-        return Icons.sports_basketball;
-      case 'volleyball':
-        return Icons.sports_volleyball;
-      case 'sports':
-        return Icons.emoji_events;
-      case 'science':
-        return Icons.science;
-      case 'academic':
-        return Icons.school;
-      case 'enrollment':
-        return Icons.app_registration;
-      default:
-        return Icons.article;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -430,12 +547,22 @@ class _NewsCard extends StatelessWidget {
           width: double.infinity,
           height: 200,
           color: const Color(0xFF1A1A1A),
-          child: Center(
-            child: Icon(
-              _getIcon(news['image']),
-              size: 80,
-              color: const Color(0xFF444444),
-            ),
+          child: Image.network(
+            news.nlink,
+            width: double.infinity,
+            height: 200,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(
+                child: Icon(Icons.article, size: 80, color: Color(0xFF444444)),
+              );
+            },
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+              );
+            },
           ),
         ),
         Padding(
@@ -444,7 +571,7 @@ class _NewsCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                news['date']!.toUpperCase(),
+                news.postDate.toUpperCase(),
                 style: const TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 12,
@@ -455,7 +582,7 @@ class _NewsCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                news['title']!,
+                news.title,
                 style: const TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 18,
@@ -466,7 +593,7 @@ class _NewsCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                news['desc']!,
+                news.details,
                 style: const TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 14,

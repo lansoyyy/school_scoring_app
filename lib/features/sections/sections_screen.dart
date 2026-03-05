@@ -1,5 +1,31 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:school_scoring_app/core/constants/app_constants.dart';
 import 'students_screen.dart';
+
+class SectionItem {
+  final int id;
+  final String slink;
+  final String name;
+  final String adviser;
+
+  SectionItem({
+    required this.id,
+    required this.slink,
+    required this.name,
+    required this.adviser,
+  });
+
+  factory SectionItem.fromJson(Map<String, dynamic> json) {
+    return SectionItem(
+      id: json['id'] as int,
+      slink: json['slink'] as String,
+      name: json['name'] as String,
+      adviser: json['adviser'] as String,
+    );
+  }
+}
 
 class SectionsScreen extends StatefulWidget {
   const SectionsScreen({super.key});
@@ -12,222 +38,58 @@ class _SectionsScreenState extends State<SectionsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
-  bool _isSearching = false;
   String _searchQuery = '';
+  List<SectionItem> _allSections = [];
+  bool _isLoadingSections = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _fetchSections();
   }
 
-  static final List<Map<String, dynamic>> _sections = [
-    {
-      'name': 'Prep-Apple',
-      'level': 'PREP',
-      'adviser': 'Ms. Gomez',
-      'count': 25,
-      'color': 0xFFFFB6C1,
-      'logo': 'P-A',
-    },
-    {
-      'name': 'Prep-Orange',
-      'level': 'PREP',
-      'adviser': 'Ms. Lim',
-      'count': 24,
-      'color': 0xFFFFDAB9,
-      'logo': 'P-O',
-    },
-    {
-      'name': 'Grade 1-Sampaguita',
-      'level': 'ELEM',
-      'adviser': 'Ms. Reyes',
-      'count': 38,
-      'color': 0xFF4A90E2,
-      'logo': 'G1-S',
-    },
-    {
-      'name': 'Grade 1-Rosal',
-      'level': 'ELEM',
-      'adviser': 'Ms. Santos',
-      'count': 36,
-      'color': 0xFF50C878,
-      'logo': 'G1-R',
-    },
-    {
-      'name': 'Grade 2-Jasmine',
-      'level': 'ELEM',
-      'adviser': 'Ms. Cruz',
-      'count': 40,
-      'color': 0xFFFF6B35,
-      'logo': 'G2-J',
-    },
-    {
-      'name': 'Grade 2-Adelfa',
-      'level': 'ELEM',
-      'adviser': 'Mr. Dela Cruz',
-      'count': 37,
-      'color': 0xFF7C3AED,
-      'logo': 'G2-A',
-    },
-    {
-      'name': 'Grade 3-Dahlia',
-      'level': 'ELEM',
-      'adviser': 'Ms. Garcia',
-      'count': 39,
-      'color': 0xFF00A896,
-      'logo': 'G3-D',
-    },
-    {
-      'name': 'Grade 4-Ilang-Ilang',
-      'level': 'ELEM',
-      'adviser': 'Mr. Lopez',
-      'count': 35,
-      'color': 0xFFF5A623,
-      'logo': 'G4-I',
-    },
-    {
-      'name': 'Grade 5-Cadena de Amor',
-      'level': 'ELEM',
-      'adviser': 'Ms. Flores',
-      'count': 38,
-      'color': 0xFFEF4444,
-      'logo': 'G5-C',
-    },
-    {
-      'name': 'Grade 6-Orchid',
-      'level': 'ELEM',
-      'adviser': 'Mr. Mendoza',
-      'count': 36,
-      'color': 0xFF0077B6,
-      'logo': 'G6-O',
-    },
-    {
-      'name': 'Grade 7-Einstein',
-      'level': 'JHS',
-      'adviser': 'Ms. Bautista',
-      'count': 42,
-      'color': 0xFF4A90E2,
-      'logo': 'G7-E',
-    },
-    {
-      'name': 'Grade 7-Newton',
-      'level': 'JHS',
-      'adviser': 'Ms. Villanueva',
-      'count': 40,
-      'color': 0xFF50C878,
-      'logo': 'G7-N',
-    },
-    {
-      'name': 'Grade 8-Sampaguita',
-      'level': 'JHS',
-      'adviser': 'Mr. Aquino',
-      'count': 41,
-      'color': 0xFFFF6B35,
-      'logo': 'G8-S',
-    },
-    {
-      'name': 'Grade 8-Rosal',
-      'level': 'JHS',
-      'adviser': 'Ms. Ramos',
-      'count': 39,
-      'color': 0xFF7C3AED,
-      'logo': 'G8-R',
-    },
-    {
-      'name': 'Grade 9-Rizal',
-      'level': 'JHS',
-      'adviser': 'Mr. Torres',
-      'count': 43,
-      'color': 0xFF00A896,
-      'logo': 'G9-R',
-    },
-    {
-      'name': 'Grade 9-Bonifacio',
-      'level': 'JHS',
-      'adviser': 'Ms. Aguilar',
-      'count': 40,
-      'color': 0xFFF5A623,
-      'logo': 'G9-B',
-    },
-    {
-      'name': 'Grade 10-Aguinaldo',
-      'level': 'JHS',
-      'adviser': 'Mr. Pascual',
-      'count': 42,
-      'color': 0xFFEF4444,
-      'logo': 'G10-A',
-    },
-    {
-      'name': 'Grade 10-Mabini',
-      'level': 'JHS',
-      'adviser': 'Ms. Navarro',
-      'count': 38,
-      'color': 0xFF0077B6,
-      'logo': 'G10-M',
-    },
-    {
-      'name': 'Grade 11-STEM',
-      'level': 'SHS',
-      'adviser': 'Mr. Fernandez',
-      'count': 44,
-      'color': 0xFF4A90E2,
-      'logo': 'STEM',
-    },
-    {
-      'name': 'Grade 11-ABM',
-      'level': 'SHS',
-      'adviser': 'Ms. Castillo',
-      'count': 40,
-      'color': 0xFF50C878,
-      'logo': 'ABM',
-    },
-    {
-      'name': 'Grade 11-HUMSS',
-      'level': 'SHS',
-      'adviser': 'Ms. Morales',
-      'count': 38,
-      'color': 0xFFFF6B35,
-      'logo': 'HUMSS',
-    },
-    {
-      'name': 'Grade 12-STEM',
-      'level': 'SHS',
-      'adviser': 'Mr. Jimenez',
-      'count': 42,
-      'color': 0xFF7C3AED,
-      'logo': 'STEM',
-    },
-    {
-      'name': 'Grade 12-ABM',
-      'level': 'SHS',
-      'adviser': 'Ms. Guerrero',
-      'count': 36,
-      'color': 0xFF00A896,
-      'logo': 'ABM',
-    },
-    {
-      'name': 'Grade 12-GAS',
-      'level': 'SHS',
-      'adviser': 'Mr. Miranda',
-      'count': 39,
-      'color': 0xFFF5A623,
-      'logo': 'GAS',
-    },
-  ];
+  Future<void> _fetchSections() async {
+    try {
+      final response = await http
+          .get(Uri.parse('${AppConstants.apiBaseUrl}/section'))
+          .timeout(
+            const Duration(milliseconds: AppConstants.connectionTimeout),
+          );
 
-  List<Map<String, dynamic>> _byLevel(String level) {
-    final sections = _sections.where((s) => s['level'] == level).toList();
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        List<SectionItem> sections = [];
+        for (var item in data) {
+          if (item is List && item.length > 1) {
+            // item[0] is category name, item[1] onwards are section objects
+            for (var i = 1; i < item.length; i++) {
+              if (item[i] is Map) {
+                sections.add(SectionItem.fromJson(item[i]));
+              }
+            }
+          }
+        }
+        setState(() {
+          _allSections = sections;
+          _isLoadingSections = false;
+        });
+      } else {
+        setState(() => _isLoadingSections = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingSections = false);
+    }
+  }
+
+  List<SectionItem> _byLevel(String level) {
+    final sections = _allSections.where((s) => s.name.contains(level)).toList();
     if (_searchQuery.isEmpty) return sections;
     return sections
         .where(
           (s) =>
-              s['name']!.toString().toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ) ||
-              s['adviser']!.toString().toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ),
+              s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              s.adviser.toLowerCase().contains(_searchQuery.toLowerCase()),
         )
         .toList();
   }
@@ -275,15 +137,19 @@ class _SectionsScreenState extends State<SectionsScreen>
           ),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildSectionList(_byLevel('PREP'), context),
-                _buildSectionList(_byLevel('ELEM'), context),
-                _buildSectionList(_byLevel('JHS'), context),
-                _buildSectionList(_byLevel('SHS'), context),
-              ],
-            ),
+            child: _isLoadingSections
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+                  )
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildSectionList(_byLevel('PREP'), context),
+                      _buildSectionList(_byLevel('ELEM'), context),
+                      _buildSectionList(_byLevel('JHS'), context),
+                      _buildSectionList(_byLevel('SHS'), context),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -315,10 +181,27 @@ class _SectionsScreenState extends State<SectionsScreen>
     );
   }
 
-  Widget _buildSectionList(
-    List<Map<String, dynamic>> sections,
-    BuildContext context,
-  ) {
+  Widget _buildSectionList(List<SectionItem> sections, BuildContext context) {
+    if (sections.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.school_outlined, size: 56, color: Colors.grey[300]),
+            const SizedBox(height: 12),
+            Text(
+              'No sections found',
+              style: TextStyle(
+                fontFamily: 'Urbanist',
+                fontSize: 15,
+                color: Colors.grey[400],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.separated(
       padding: EdgeInsets.zero,
       itemCount: sections.length,
@@ -326,11 +209,19 @@ class _SectionsScreenState extends State<SectionsScreen>
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
       itemBuilder: (context, i) {
         final s = sections[i];
-        final initials = s['logo'] as String;
         return InkWell(
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => StudentsScreen(section: s)),
+            MaterialPageRoute(
+              builder: (_) => StudentsScreen(
+                section: {
+                  'name': s.name,
+                  'id': s.id,
+                  'slink': s.slink,
+                  'adviser': s.adviser,
+                },
+              ),
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -343,15 +234,19 @@ class _SectionsScreenState extends State<SectionsScreen>
                     color: Color(0xFFE8E8E8),
                     shape: BoxShape.circle,
                   ),
-                  child: Center(
-                    child: Text(
-                      initials.length > 3 ? initials.substring(0, 3) : initials,
-                      style: const TextStyle(
-                        fontFamily: 'Urbanist',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF555555),
-                      ),
+                  child: ClipOval(
+                    child: Image.network(
+                      s.slink,
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.school,
+                          size: 20,
+                          color: Color(0xFF555555),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -361,7 +256,7 @@ class _SectionsScreenState extends State<SectionsScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        s['name'],
+                        s.name,
                         style: const TextStyle(
                           fontFamily: 'Urbanist',
                           fontSize: 15,
@@ -371,7 +266,7 @@ class _SectionsScreenState extends State<SectionsScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${s['adviser']} · ${s['count']} students',
+                        s.adviser,
                         style: const TextStyle(
                           fontFamily: 'Urbanist',
                           fontSize: 12,

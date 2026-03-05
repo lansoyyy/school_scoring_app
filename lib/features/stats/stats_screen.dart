@@ -1,4 +1,33 @@
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:school_scoring_app/core/constants/app_constants.dart';
+
+class StatItem {
+  final int id;
+  final String slink;
+  final String name;
+  final String section;
+  final String grade;
+
+  StatItem({
+    required this.id,
+    required this.slink,
+    required this.name,
+    required this.section,
+    required this.grade,
+  });
+
+  factory StatItem.fromJson(Map<String, dynamic> json) {
+    return StatItem(
+      id: json['id'] as int,
+      slink: json['slink'] as String,
+      name: json['name'] as String,
+      section: json['section'] as String,
+      grade: json['grade'] as String,
+    );
+  }
+}
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -12,17 +41,68 @@ class _StatsScreenState extends State<StatsScreen>
   late TabController _tabController;
   final List<String> _subjects = [
     'ALL',
-    'MATH',
-    'SCIENCE',
     'ENGLISH',
+    'SCIENCE',
     'FILIPINO',
-    'RELIGION',
+    'PE',
   ];
+
+  Map<String, List<StatItem>> _data = {};
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _subjects.length, vsync: this);
+    _fetchStatistics();
+  }
+
+  Future<void> _fetchStatistics() async {
+    try {
+      final response = await http
+          .get(Uri.parse('${AppConstants.apiBaseUrl}/statistics'))
+          .timeout(
+            const Duration(milliseconds: AppConstants.connectionTimeout),
+          );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        Map<String, List<StatItem>> parsedData = {};
+
+        for (var item in data) {
+          if (item is List && item.length > 1) {
+            // item[0] is subject map, item[1] onwards are grade arrays
+            final subjectMap = item[0] as Map<String, dynamic>;
+            final subject = subjectMap['subject'] as String;
+            final stats = <StatItem>[];
+
+            // Process each grade array
+            for (var i = 1; i < item.length; i++) {
+              if (item[i] is List) {
+                final gradeArray = item[i] as List;
+                // gradeArray[0] is grade map, gradeArray[1] onwards are stat objects
+                for (var j = 1; j < gradeArray.length; j++) {
+                  if (gradeArray[j] is Map) {
+                    stats.add(StatItem.fromJson(gradeArray[j]));
+                  }
+                }
+              }
+            }
+
+            parsedData[subject] = stats;
+          }
+        }
+
+        setState(() {
+          _data = parsedData;
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -31,382 +111,7 @@ class _StatsScreenState extends State<StatsScreen>
     super.dispose();
   }
 
-  static final Map<String, List<Map<String, dynamic>>> _data = {
-    'ALL': [
-      {
-        'name': 'Bianca Reyes',
-        'section': 'Grade 11-STEM',
-        'score': 97.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Andrei Santos',
-        'section': 'Grade 10-Aguinaldo',
-        'score': 96.8,
-        'gender': 'M',
-      },
-      {
-        'name': 'Diana Cruz',
-        'section': 'Grade 12-STEM',
-        'score': 96.2,
-        'gender': 'F',
-      },
-      {
-        'name': 'Carlo Mendoza',
-        'section': 'Grade 11-ABM',
-        'score': 95.7,
-        'gender': 'M',
-      },
-      {
-        'name': 'Tricia Aquino',
-        'section': 'Grade 10-Mabini',
-        'score': 95.1,
-        'gender': 'F',
-      },
-      {
-        'name': 'Eduardo Bautista',
-        'section': 'Grade 9-Rizal',
-        'score': 94.6,
-        'gender': 'M',
-      },
-      {
-        'name': 'Felicia Torres',
-        'section': 'Grade 12-ABM',
-        'score': 94.2,
-        'gender': 'F',
-      },
-      {
-        'name': 'Gerald Villanueva',
-        'section': 'Grade 11-HUMSS',
-        'score': 93.8,
-        'gender': 'M',
-      },
-      {
-        'name': 'Hannah Lopez',
-        'section': 'Grade 9-Bonifacio',
-        'score': 93.4,
-        'gender': 'F',
-      },
-      {
-        'name': 'Ivan Garcia',
-        'section': 'Grade 10-Aguinaldo',
-        'score': 93.0,
-        'gender': 'M',
-      },
-    ],
-    'MATH': [
-      {
-        'name': 'Andrei Santos',
-        'section': 'Grade 10-Aguinaldo',
-        'score': 99.0,
-        'gender': 'M',
-      },
-      {
-        'name': 'Carlo Mendoza',
-        'section': 'Grade 11-STEM',
-        'score': 98.0,
-        'gender': 'M',
-      },
-      {
-        'name': 'Bianca Reyes',
-        'section': 'Grade 11-STEM',
-        'score': 97.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Kevin Flores',
-        'section': 'Grade 12-STEM',
-        'score': 96.0,
-        'gender': 'M',
-      },
-      {
-        'name': 'Diana Cruz',
-        'section': 'Grade 12-STEM',
-        'score': 95.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Oscar Morales',
-        'section': 'Grade 11-ABM',
-        'score': 94.5,
-        'gender': 'M',
-      },
-      {
-        'name': 'Lara Aguilar',
-        'section': 'Grade 9-Rizal',
-        'score': 93.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Marco Navarro',
-        'section': 'Grade 10-Mabini',
-        'score': 92.5,
-        'gender': 'M',
-      },
-      {
-        'name': 'Eduardo Bautista',
-        'section': 'Grade 9-Rizal',
-        'score': 91.5,
-        'gender': 'M',
-      },
-      {
-        'name': 'Samuel Pascual',
-        'section': 'Grade 12-GAS',
-        'score': 90.5,
-        'gender': 'M',
-      },
-    ],
-    'SCIENCE': [
-      {
-        'name': 'Bianca Reyes',
-        'section': 'Grade 11-STEM',
-        'score': 99.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Diana Cruz',
-        'section': 'Grade 12-STEM',
-        'score': 98.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Andrei Santos',
-        'section': 'Grade 10-Aguinaldo',
-        'score': 97.0,
-        'gender': 'M',
-      },
-      {
-        'name': 'Tricia Aquino',
-        'section': 'Grade 10-Mabini',
-        'score': 96.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Ivan Garcia',
-        'section': 'Grade 10-Aguinaldo',
-        'score': 95.0,
-        'gender': 'M',
-      },
-      {
-        'name': 'Felicia Torres',
-        'section': 'Grade 12-ABM',
-        'score': 94.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Carlo Mendoza',
-        'section': 'Grade 11-STEM',
-        'score': 93.0,
-        'gender': 'M',
-      },
-      {
-        'name': 'Pamela Jimenez',
-        'section': 'Grade 11-HUMSS',
-        'score': 92.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Nikki Castillo',
-        'section': 'Grade 9-Bonifacio',
-        'score': 91.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Gerald Villanueva',
-        'section': 'Grade 11-HUMSS',
-        'score': 90.0,
-        'gender': 'M',
-      },
-    ],
-    'ENGLISH': [
-      {
-        'name': 'Felicia Torres',
-        'section': 'Grade 12-ABM',
-        'score': 99.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Hannah Lopez',
-        'section': 'Grade 9-Bonifacio',
-        'score': 98.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Bianca Reyes',
-        'section': 'Grade 11-STEM',
-        'score': 97.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Rhea Miranda',
-        'section': 'Grade 11-HUMSS',
-        'score': 96.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Diana Cruz',
-        'section': 'Grade 12-STEM',
-        'score': 95.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Andrei Santos',
-        'section': 'Grade 10-Aguinaldo',
-        'score': 94.5,
-        'gender': 'M',
-      },
-      {
-        'name': 'Nikki Castillo',
-        'section': 'Grade 9-Bonifacio',
-        'score': 93.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Tricia Aquino',
-        'section': 'Grade 10-Mabini',
-        'score': 92.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Pamela Jimenez',
-        'section': 'Grade 11-HUMSS',
-        'score': 91.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Gerald Villanueva',
-        'section': 'Grade 11-HUMSS',
-        'score': 90.5,
-        'gender': 'M',
-      },
-    ],
-    'FILIPINO': [
-      {
-        'name': 'Tricia Aquino',
-        'section': 'Grade 10-Mabini',
-        'score': 99.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Rhea Miranda',
-        'section': 'Grade 11-HUMSS',
-        'score': 98.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Felicia Torres',
-        'section': 'Grade 12-ABM',
-        'score': 97.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Hannah Lopez',
-        'section': 'Grade 9-Bonifacio',
-        'score': 96.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Eduardo Bautista',
-        'section': 'Grade 9-Rizal',
-        'score': 95.0,
-        'gender': 'M',
-      },
-      {
-        'name': 'Lara Aguilar',
-        'section': 'Grade 9-Rizal',
-        'score': 94.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Jasmine Ramos',
-        'section': 'Grade 10-Mabini',
-        'score': 93.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Bianca Reyes',
-        'section': 'Grade 11-STEM',
-        'score': 92.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Oscar Morales',
-        'section': 'Grade 11-ABM',
-        'score': 91.0,
-        'gender': 'M',
-      },
-      {
-        'name': 'Pamela Jimenez',
-        'section': 'Grade 11-HUMSS',
-        'score': 90.0,
-        'gender': 'F',
-      },
-    ],
-    'RELIGION': [
-      {
-        'name': 'Diana Cruz',
-        'section': 'Grade 12-STEM',
-        'score': 100.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Tricia Aquino',
-        'section': 'Grade 10-Mabini',
-        'score': 99.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Bianca Reyes',
-        'section': 'Grade 11-STEM',
-        'score': 98.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Hannah Lopez',
-        'section': 'Grade 9-Bonifacio',
-        'score': 97.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Felicia Torres',
-        'section': 'Grade 12-ABM',
-        'score': 97.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Rhea Miranda',
-        'section': 'Grade 11-HUMSS',
-        'score': 96.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Nikki Castillo',
-        'section': 'Grade 9-Bonifacio',
-        'score': 95.5,
-        'gender': 'F',
-      },
-      {
-        'name': 'Andrei Santos',
-        'section': 'Grade 10-Aguinaldo',
-        'score': 94.5,
-        'gender': 'M',
-      },
-      {
-        'name': 'Lara Aguilar',
-        'section': 'Grade 9-Rizal',
-        'score': 94.0,
-        'gender': 'F',
-      },
-      {
-        'name': 'Eduardo Bautista',
-        'section': 'Grade 9-Rizal',
-        'score': 93.0,
-        'gender': 'M',
-      },
-    ],
-  };
-
-  List<Map<String, dynamic>> _listFor(String subject) => _data[subject] ?? [];
+  List<StatItem> _listFor(String subject) => _data[subject] ?? [];
 
   @override
   Widget build(BuildContext context) {
@@ -441,12 +146,16 @@ class _StatsScreenState extends State<StatsScreen>
           ),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: _subjects
-                  .map((s) => _buildRankList(_listFor(s)))
-                  .toList(),
-            ),
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+                  )
+                : TabBarView(
+                    controller: _tabController,
+                    children: _subjects
+                        .map((s) => _buildRankList(_listFor(s)))
+                        .toList(),
+                  ),
           ),
         ],
       ),
@@ -475,11 +184,11 @@ class _StatsScreenState extends State<StatsScreen>
     );
   }
 
-  Widget _buildRankList(List<Map<String, dynamic>> students) {
+  Widget _buildRankList(List<StatItem> students) {
     // Group students by grade/level
-    final groupedStudents = <String, List<Map<String, dynamic>>>{};
+    final groupedStudents = <String, List<StatItem>>{};
     for (var s in students) {
-      final section = s['section'] as String;
+      final section = s.section;
       final gradeMatch = RegExp(r'(Grade \d+)').firstMatch(section);
       final grade = gradeMatch != null ? gradeMatch.group(1)! : 'Other';
 
@@ -526,9 +235,6 @@ class _StatsScreenState extends State<StatsScreen>
               final index = entry.key;
               final s = entry.value;
               final rank = index + 1;
-              final initials =
-                  s['name'].toString().split(' ').first[0] +
-                  s['name'].toString().split(' ').last[0];
 
               return Column(
                 children: [
@@ -559,15 +265,26 @@ class _StatsScreenState extends State<StatsScreen>
                             color: Color(0xFFE8E8E8),
                             shape: BoxShape.circle,
                           ),
-                          child: Center(
-                            child: Text(
-                              initials,
-                              style: const TextStyle(
-                                fontFamily: 'Urbanist',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF555555),
-                              ),
+                          child: ClipOval(
+                            child: Image.network(
+                              s.slink,
+                              width: 44,
+                              height: 44,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Center(
+                                  child: Text(
+                                    s.name.split(' ').first[0] +
+                                        s.name.split(' ').last[0],
+                                    style: const TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF555555),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ),
@@ -577,7 +294,7 @@ class _StatsScreenState extends State<StatsScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                s['name'],
+                                s.name,
                                 style: const TextStyle(
                                   fontFamily: 'Urbanist',
                                   fontSize: 15,
@@ -587,7 +304,7 @@ class _StatsScreenState extends State<StatsScreen>
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                s['section'],
+                                s.section,
                                 style: const TextStyle(
                                   fontFamily: 'Urbanist',
                                   fontSize: 12,
@@ -598,7 +315,7 @@ class _StatsScreenState extends State<StatsScreen>
                           ),
                         ),
                         Text(
-                          (s['score'] as double).toStringAsFixed(1),
+                          s.grade,
                           style: const TextStyle(
                             fontFamily: 'Urbanist',
                             fontSize: 16,
@@ -609,11 +326,11 @@ class _StatsScreenState extends State<StatsScreen>
                       ],
                     ),
                   ),
-                  if (index < gradeStudents.length - 1)
-                    const Divider(height: 1, color: Color(0xFFEEEEEE)),
                 ],
               );
             }).toList(),
+            if (i < sortedGrades.length - 1)
+              const Divider(height: 1, color: Color(0xFFEEEEEE)),
           ],
         );
       },
