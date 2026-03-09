@@ -1,4 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:school_scoring_app/core/constants/app_constants.dart';
+
+class GradeItem {
+  final String subject;
+  final int grade;
+
+  GradeItem({required this.subject, required this.grade});
+}
 
 class GradesScreen extends StatefulWidget {
   final Map<String, dynamic> student;
@@ -55,22 +65,82 @@ class _GradesScreenState extends State<GradesScreen> {
     },
   ];
 
-  static const List<List<int>> _gradesData = [
-    [92, 88, 95, 90, 85, 91, 88, 87],
-    [89, 90, 87, 92, 88, 93, 90, 85],
-    [94, 91, 88, 86, 90, 87, 92, 89],
-    [91, 93, 90, 88, 92, 89, 86, 91],
-    [93, 89, 92, 91, 87, 90, 89, 88],
-    [90, 92, 89, 93, 91, 88, 90, 87],
-    [88, 90, 93, 89, 92, 87, 91, 90],
-    [91, 87, 90, 92, 88, 93, 89, 91],
-    [89, 91, 88, 90, 93, 87, 92, 88],
-    [90, 88, 92, 89, 91, 90, 87, 93],
-    [87, 90, 91, 88, 92, 89, 93, 90],
-    [92, 89, 88, 91, 90, 92, 88, 87],
-  ];
+  Map<String, Map<String, int>> _gradesData = {};
+  bool _isLoadingGrades = true;
 
-  List<int> get _currentGrades => _gradesData[_selectedQuarter];
+  List<int> get _currentGrades {
+    final quarterKey = _quarterLabels[_selectedQuarter];
+    final quarterGrades = _gradesData[quarterKey];
+    if (quarterGrades == null) {
+      return List.generate(_subjects.length, (index) => 0);
+    }
+    return _subjects.map((subject) {
+      final subjectName = subject['name'] as String;
+      return quarterGrades![subjectName] ?? 0;
+    }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchGrades();
+  }
+
+  Future<void> _fetchGrades() async {
+    try {
+      final studentId = widget.student['id'];
+      final response = await http
+          .get(Uri.parse('${AppConstants.apiBaseUrl}/grade?id=$studentId'))
+          .timeout(
+            const Duration(milliseconds: AppConstants.connectionTimeout),
+          );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        Map<String, Map<String, int>> parsedData = {};
+
+        for (var item in data) {
+          if (item is Map) {
+            final quarter = item['quarter'] as String;
+            final grades = <String, int>{};
+
+            // Map subject names to API field names
+            final subjectMapping = {
+              'Mathematics': 'mathematics',
+              'Science': 'science',
+              'English': 'english',
+              'Filipino': 'filipino',
+              'Araling Panlipunan': 'religion',
+              'MAPEH': 'pe',
+              'Values Education': 'religion',
+              'Technology & Livelihood': 'religion',
+            };
+
+            for (var subject in _subjects) {
+              final subjectName = subject['name'] as String;
+              final apiField = subjectMapping[subjectName];
+              if (apiField != null && item[apiField] != null) {
+                grades[subjectName] = double.parse(
+                  item[apiField].toString(),
+                ).toInt();
+              }
+            }
+
+            parsedData[quarter] = grades;
+          }
+        }
+
+        setState(() {
+          _gradesData = parsedData;
+          _isLoadingGrades = false;
+        });
+      } else {
+        setState(() => _isLoadingGrades = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingGrades = false);
+    }
+  }
 
   Color _gradeColor(int grade) {
     if (grade >= 90) return const Color(0xFF10B981);
@@ -92,46 +162,50 @@ class _GradesScreenState extends State<GradesScreen> {
           _buildGWARow(),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
-            child: ListView.separated(
-              padding: EdgeInsets.zero,
-              itemCount: _subjects.length,
-              separatorBuilder: (_, __) =>
-                  const Divider(height: 1, color: Color(0xFFEEEEEE)),
-              itemBuilder: (context, i) {
-                final subject = _subjects[i];
-                final grade = _currentGrades[i];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          subject['name'],
-                          style: const TextStyle(
-                            fontFamily: 'Urbanist',
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF1A1A1A),
-                          ),
+            child: _isLoadingGrades
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+                  )
+                : ListView.separated(
+                    padding: EdgeInsets.zero,
+                    itemCount: _subjects.length,
+                    separatorBuilder: (_, __) =>
+                        const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                    itemBuilder: (context, i) {
+                      final subject = _subjects[i];
+                      final grade = _currentGrades[i];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
                         ),
-                      ),
-                      Text(
-                        '$grade',
-                        style: TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: _gradeColor(grade),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                subject['name'],
+                                style: const TextStyle(
+                                  fontFamily: 'Urbanist',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '$grade',
+                              style: TextStyle(
+                                fontFamily: 'Urbanist',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: _gradeColor(grade),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
