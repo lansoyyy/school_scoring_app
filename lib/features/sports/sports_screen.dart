@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:school_scoring_app/core/constants/app_constants.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class GameItem {
@@ -39,20 +40,20 @@ class GameItem {
 
   factory GameItem.fromJson(Map<String, dynamic> json) {
     return GameItem(
-      id: json['id'] as int,
-      glink: json['glink'] as String? ?? '',
-      eventPlace: json['event_place'] as String,
-      gameDate: json['game_date'] as String,
-      gameTime: json['game_time'] as String,
-      team1: json['team1'] as String,
-      team2: json['team2'] as String,
-      team1Score: json['team1_score'] as String? ?? '',
-      team2Score: json['team2_score'] as String? ?? '',
-      timeRem: json['time_rem'] as String? ?? '',
-      gameQtr: json['game_qtr'] as String? ?? '',
-      team1Pic: json['team1_pic'] as String,
-      team2Pic: json['team2_pic'] as String,
-      gameStatus: json['game_status'] as String,
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      glink: json['glink']?.toString() ?? '',
+      eventPlace: json['event_place']?.toString() ?? '',
+      gameDate: json['game_date']?.toString() ?? '',
+      gameTime: json['game_time']?.toString() ?? '',
+      team1: json['team1']?.toString() ?? '',
+      team2: json['team2']?.toString() ?? '',
+      team1Score: json['team1_score']?.toString() ?? '',
+      team2Score: json['team2_score']?.toString() ?? '',
+      timeRem: json['time_rem']?.toString() ?? '',
+      gameQtr: json['game_qtr']?.toString() ?? '',
+      team1Pic: json['team1_pic']?.toString() ?? '',
+      team2Pic: json['team2_pic']?.toString() ?? '',
+      gameStatus: json['game_status']?.toString() ?? '',
     );
   }
 }
@@ -65,69 +66,39 @@ class SportsScreen extends StatefulWidget {
 }
 
 class _SportsScreenState extends State<SportsScreen> {
-  int _selectedDayIndex = 3;
-  final DateTime _baseDate = DateTime(2026, 2, 15);
-  final TextEditingController _searchController = TextEditingController();
-  bool _isSearching = false;
-  String _searchQuery = '';
+  final DateFormat _apiDateFormat = DateFormat('MM-dd-yyyy');
+  final DateFormat _monthLabelFormat = DateFormat('MMMM yyyy');
+  DateTime _displayedMonth = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+  );
+  DateTime? _selectedDate;
   List<GameItem> _allGames = [];
   bool _isLoadingGames = true;
-  String? _selectedDate;
+  String? _gamesError;
 
-  List<GameItem> get _todayEvents {
-    if (_selectedDate != null) {
-      return _allGames.where((g) => g.gameDate == _selectedDate).toList();
+  List<GameItem> get _visibleEvents {
+    final selectedDate = _selectedDate;
+    if (selectedDate == null) {
+      return const [];
     }
-    // Get date for selected day index
-    final selectedDate = _baseDate.add(Duration(days: _selectedDayIndex));
-    final formattedDate =
-        '${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}-${selectedDate.year}';
-    return _allGames.where((g) => g.gameDate == formattedDate).toList();
+
+    final formattedDate = _formatApiDate(selectedDate);
+    return _allGames.where((game) => game.gameDate == formattedDate).toList();
   }
 
-  List<GameItem> get _filteredEvents {
-    final events = _todayEvents;
-    if (_searchQuery.isEmpty) return events;
-    return events
-        .where(
-          (e) =>
-              e.team1.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              e.team2.toLowerCase().contains(_searchQuery.toLowerCase()),
-        )
-        .toList();
+  List<DateTime> get _monthDays {
+    final totalDays = DateUtils.getDaysInMonth(
+      _displayedMonth.year,
+      _displayedMonth.month,
+    );
+
+    return List.generate(
+      totalDays,
+      (index) =>
+          DateTime(_displayedMonth.year, _displayedMonth.month, index + 1),
+    );
   }
-
-  List<String> get _weekDays => [
-    'S',
-    'M',
-    'T',
-    'W',
-    'T',
-    'F',
-    'S',
-    'S',
-    'M',
-    'T',
-    'W',
-    'T',
-    'F',
-  ];
-
-  List<int> get _weekDates => [
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-  ];
 
   @override
   void initState() {
@@ -135,57 +106,71 @@ class _SportsScreenState extends State<SportsScreen> {
     _fetchGames();
   }
 
-  Future<void> _fetchGames({String? date}) async {
+  Future<void> _fetchGames({DateTime? date}) async {
+    setState(() {
+      _isLoadingGames = true;
+      _gamesError = null;
+    });
+
     try {
-      String url = '${AppConstants.apiBaseUrl}/game';
-      if (date != null) {
-        url += '?date=$date';
-      }
+      final uri = Uri.parse('${AppConstants.apiBaseUrl}/game').replace(
+        queryParameters: date == null ? null : {'date': _formatApiDate(date)},
+      );
 
       final response = await http
-          .get(Uri.parse(url))
+          .get(uri)
           .timeout(
             const Duration(milliseconds: AppConstants.connectionTimeout),
           );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
+        final games = data
+            .whereType<Map>()
+            .map((item) => GameItem.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+        final resolvedDate = date ?? _resolveInitialDate(games);
+
         setState(() {
-          _allGames = data.map((item) => GameItem.fromJson(item)).toList();
+          _allGames = games;
           _isLoadingGames = false;
-          if (date != null) {
-            _selectedDate = date;
-          }
+          _selectedDate = resolvedDate;
+          _displayedMonth = DateTime(resolvedDate.year, resolvedDate.month);
         });
       } else {
-        setState(() => _isLoadingGames = false);
+        setState(() {
+          _isLoadingGames = false;
+          _gamesError = 'Unable to load games right now.';
+        });
       }
-    } catch (e) {
-      setState(() => _isLoadingGames = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingGames = false;
+        _gamesError = 'Unable to load games right now.';
+      });
     }
   }
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final events = _isSearching ? _filteredEvents : _todayEvents;
+    final events = _visibleEvents;
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         children: [
           _buildHeader(),
-          _buildWeekCalendar(),
+          _buildMonthCalendar(),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
             child: _isLoadingGames
                 ? const Center(
                     child: CircularProgressIndicator(color: Color(0xFFD4A017)),
                   )
+                : _gamesError != null
+                ? _buildErrorState()
                 : events.isEmpty
                 ? _buildEmpty()
                 : ListView.builder(
@@ -220,48 +205,29 @@ class _SportsScreenState extends State<SportsScreen> {
                 ),
               ),
               const Spacer(),
-              if (!_isSearching)
-                IconButton(
-                  onPressed: () {
-                    setState(() => _isSearching = true);
-                  },
-                  icon: const Icon(Icons.search, color: Color(0xFF1A1A1A)),
-                )
-              else
-                Row(
+              InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: _openMonthPicker,
+                child: Row(
                   children: [
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _isSearching = false;
-                          _searchQuery = '';
-                          _searchController.clear();
-                        });
-                      },
-                      icon: const Icon(Icons.close, color: Color(0xFF1A1A1A)),
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 18,
+                      color: Color(0xFF1A1A1A),
                     ),
-                    SizedBox(
-                      width: 200,
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (v) => setState(() => _searchQuery = v),
-                        autofocus: true,
-                        decoration: const InputDecoration(
-                          hintText: 'Search games...',
-                          border: InputBorder.none,
-                          hintStyle: TextStyle(
-                            fontFamily: 'Urbanist',
-                            color: Color(0xFF888888),
-                          ),
-                        ),
-                        style: const TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 16,
-                        ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _monthLabelFormat.format(_displayedMonth),
+                      style: const TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1A1A),
                       ),
                     ),
                   ],
                 ),
+              ),
             ],
           ),
         ),
@@ -269,7 +235,7 @@ class _SportsScreenState extends State<SportsScreen> {
     );
   }
 
-  Widget _buildWeekCalendar() {
+  Widget _buildMonthCalendar() {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -277,28 +243,22 @@ class _SportsScreenState extends State<SportsScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
-          children: List.generate(_weekDates.length, (index) {
-            final isSelected = index == _selectedDayIndex;
+          children: List.generate(_monthDays.length, (index) {
+            final day = _monthDays[index];
+            final isSelected =
+                _selectedDate != null &&
+                DateUtils.isSameDay(_selectedDate, day);
+
             return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedDayIndex = index;
-                  _selectedDate = null;
-                });
-                // Fetch games for selected date
-                final selectedDate = _baseDate.add(Duration(days: index));
-                final formattedDateForApi =
-                    '${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}-${selectedDate.year}';
-                _fetchGames(date: formattedDateForApi);
-              },
+              onTap: () => _fetchGames(date: day),
               child: Container(
                 margin: EdgeInsets.only(
-                  right: index < _weekDates.length - 1 ? 24 : 0,
+                  right: index < _monthDays.length - 1 ? 16 : 0,
                 ),
                 child: Column(
                   children: [
                     Text(
-                      _weekDays[index],
+                      DateFormat('E').format(day).substring(0, 1),
                       style: TextStyle(
                         fontFamily: 'Urbanist',
                         fontSize: 12,
@@ -320,7 +280,7 @@ class _SportsScreenState extends State<SportsScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          '${_weekDates[index]}',
+                          '${day.day}',
                           style: TextStyle(
                             fontFamily: 'Urbanist',
                             fontSize: 16,
@@ -342,6 +302,93 @@ class _SportsScreenState extends State<SportsScreen> {
     );
   }
 
+  Future<void> _openMonthPicker() async {
+    final pickedMonth = await showDialog<DateTime>(
+      context: context,
+      builder: (context) => _MonthPickerDialog(initialMonth: _displayedMonth),
+    );
+
+    if (pickedMonth == null) {
+      return;
+    }
+
+    final previousSelection = _selectedDate ?? DateTime.now();
+    final maxDay = DateUtils.getDaysInMonth(
+      pickedMonth.year,
+      pickedMonth.month,
+    );
+    final nextDay = previousSelection.day > maxDay
+        ? maxDay
+        : previousSelection.day;
+    final nextDate = DateTime(pickedMonth.year, pickedMonth.month, nextDay);
+
+    await _fetchGames(date: nextDate);
+  }
+
+  DateTime _resolveInitialDate(List<GameItem> games) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final todayKey = _formatApiDate(today);
+
+    if (games.any((game) => game.gameDate == todayKey)) {
+      return today;
+    }
+
+    for (final game in games) {
+      final parsedDate = _tryParseApiDate(game.gameDate);
+      if (parsedDate != null) {
+        return parsedDate;
+      }
+    }
+
+    return today;
+  }
+
+  String _formatApiDate(DateTime date) => _apiDateFormat.format(date);
+
+  DateTime? _tryParseApiDate(String value) {
+    try {
+      return _apiDateFormat.parseStrict(value);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_off_outlined, size: 56, color: Colors.grey[300]),
+            const SizedBox(height: 12),
+            Text(
+              _gamesError ?? 'Unable to load games right now.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Urbanist',
+                fontSize: 15,
+                color: Colors.grey[500],
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => _fetchGames(date: _selectedDate),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1A1A1A),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text(
+                'Try Again',
+                style: TextStyle(fontFamily: 'Urbanist'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmpty() {
     return Center(
       child: Column(
@@ -350,7 +397,9 @@ class _SportsScreenState extends State<SportsScreen> {
           Icon(Icons.sports_outlined, size: 56, color: Colors.grey[300]),
           const SizedBox(height: 12),
           Text(
-            'No games scheduled',
+            _selectedDate == null
+                ? 'No games available'
+                : 'No games scheduled for ${_formatApiDate(_selectedDate!)}',
             style: TextStyle(
               fontFamily: 'Urbanist',
               fontSize: 15,
@@ -358,6 +407,145 @@ class _SportsScreenState extends State<SportsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MonthPickerDialog extends StatefulWidget {
+  final DateTime initialMonth;
+
+  const _MonthPickerDialog({required this.initialMonth});
+
+  @override
+  State<_MonthPickerDialog> createState() => _MonthPickerDialogState();
+}
+
+class _MonthPickerDialogState extends State<_MonthPickerDialog> {
+  static const List<String> _monthNames = <String>[
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  late int _visibleYear;
+
+  @override
+  void initState() {
+    super.initState();
+    _visibleYear = widget.initialMonth.year;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Select Month',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => setState(() => _visibleYear--),
+                  icon: const Icon(Icons.chevron_left),
+                ),
+                Text(
+                  '$_visibleYear',
+                  style: const TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => setState(() => _visibleYear++),
+                  icon: const Icon(Icons.chevron_right),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _monthNames.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 2.3,
+              ),
+              itemBuilder: (context, index) {
+                final monthNumber = index + 1;
+                final isSelected =
+                    _visibleYear == widget.initialMonth.year &&
+                    monthNumber == widget.initialMonth.month;
+
+                return InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () => Navigator.pop(
+                    context,
+                    DateTime(_visibleYear, monthNumber),
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF1A1A1A)
+                          : const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _monthNames[index],
+                      style: TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF1A1A1A),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    color: Color(0xFF666666),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
