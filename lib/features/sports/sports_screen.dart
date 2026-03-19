@@ -211,11 +211,11 @@ class _SportsScreenState extends State<SportsScreen> {
           child: Row(
             children: [
               const Text(
-                'Sports Schedule',
+                'GAMES',
                 style: TextStyle(
                   fontFamily: 'Urbanist',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
                   color: Color(0xFF1A1A1A),
                 ),
               ),

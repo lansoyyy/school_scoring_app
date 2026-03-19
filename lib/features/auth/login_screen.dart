@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_constants.dart';
 import '../../navigation/main_navigation.dart';
+import 'services/auth_api_service.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -15,6 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final AuthApiService _authApi = const AuthApiService();
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -33,50 +32,25 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    try {
-      final response = await http
-          .post(
-            Uri.parse('${AppConstants.apiBaseUrl}/login'),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({
-              'email': _emailCtrl.text.trim(),
-              'password': _passCtrl.text,
-            }),
-          )
-          .timeout(
-            const Duration(milliseconds: AppConstants.connectionTimeout),
-          );
+    final response = await _authApi.login(
+      username: _emailCtrl.text.trim(),
+      password: _passCtrl.text,
+    );
 
-      if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        // TODO: Store token/user data if needed
+    if (!mounted) return;
+    setState(() => _isLoading = false);
 
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainNavigation()),
-        );
-      } else {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login failed. Please check your credentials.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An error occurred. Please try again.'),
-          backgroundColor: AppColors.error,
-        ),
+    if (response.isSuccess) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainNavigation()),
       );
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(response.message), backgroundColor: AppColors.error),
+    );
   }
 
   @override

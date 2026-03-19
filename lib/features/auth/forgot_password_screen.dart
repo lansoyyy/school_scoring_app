@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_constants.dart';
+import 'services/auth_api_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -12,10 +10,12 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final AuthApiService _authApi = const AuthApiService();
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   bool _isLoading = false;
   bool _emailSent = false;
+  String _successMessage = 'Successful';
 
   @override
   void dispose() {
@@ -27,43 +27,34 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    try {
-      final response = await http
-          .post(
-            Uri.parse('${AppConstants.apiBaseUrl}/changepassword'),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({'email': _emailCtrl.text.trim()}),
-          )
-          .timeout(
-            const Duration(milliseconds: AppConstants.connectionTimeout),
-          );
+    final response = await _authApi.changePassword(
+      username: _emailCtrl.text.trim(),
+    );
 
-      if (response.statusCode == 200) {
-        if (!mounted) return;
-        setState(() {
-          _isLoading = false;
-          _emailSent = true;
-        });
-      } else {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send reset link. Please try again.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (response.isSuccess) {
+      setState(() {
+        _emailSent = true;
+        _successMessage = response.message;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('An error occurred. Please try again.'),
-          backgroundColor: AppColors.error,
+          content: Text(response.message),
+          backgroundColor: AppColors.success,
         ),
       );
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(response.message),
+        backgroundColor: AppColors.error,
+      ),
+    );
   }
 
   @override
@@ -338,7 +329,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'We\'ve sent a password reset link to\n${_emailCtrl.text}',
+          '$_successMessage\nfor ${_emailCtrl.text}',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'Urbanist',

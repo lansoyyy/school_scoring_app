@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:school_scoring_app/features/home/home_screen.dart';
-import 'package:school_scoring_app/navigation/main_navigation.dart';
 import 'core/constants/app_strings.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/splash_screen.dart';

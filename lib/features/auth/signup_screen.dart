@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_constants.dart';
+import 'services/auth_api_service.dart';
 import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -13,6 +11,7 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final AuthApiService _authApi = const AuthApiService();
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
@@ -45,59 +44,34 @@ class _SignupScreenState extends State<SignupScreen> {
     }
     setState(() => _isLoading = true);
 
-    try {
-      final response = await http
-          .get(
-            Uri.parse(
-              '${AppConstants.apiBaseUrl}/signup?email=${_emailCtrl.text.trim()}',
-            ),
-          )
-          .timeout(
-            const Duration(milliseconds: AppConstants.connectionTimeout),
-          );
+    final response = await _authApi.signup(
+      username: _emailCtrl.text.trim(),
+      password: _passCtrl.text,
+    );
 
-      if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        String message = 'Signup link sent to your email!';
+    if (!mounted) return;
+    setState(() => _isLoading = false);
 
-        if (decoded is Map) {
-          final data = decoded as Map<String, dynamic>;
-          message = data['message']?.toString() ?? message;
-        } else if (decoded is List && decoded.isNotEmpty) {
-          final data = decoded[0] as Map<String, dynamic>;
-          message = data['message']?.toString() ?? message;
-        }
-
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: AppColors.success),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-      } else {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Registration failed. Please try again.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      print('Signup error: $e');
+    if (response.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('An error occurred: ${e.toString()}'),
-          backgroundColor: AppColors.error,
+          content: Text(response.message),
+          backgroundColor: AppColors.success,
         ),
       );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(response.message),
+        backgroundColor: AppColors.error,
+      ),
+    );
   }
 
   @override
