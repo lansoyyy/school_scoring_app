@@ -36,10 +36,12 @@ class SectionsScreen extends StatefulWidget {
 
 class _SectionsScreenState extends State<SectionsScreen>
     with SingleTickerProviderStateMixin {
+  static const List<String> _levels = ['PREP', 'ELEM', 'JHS', 'SHS'];
+
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  List<SectionItem> _allSections = [];
+  Map<String, List<SectionItem>> _sectionsByLevel = {};
   bool _isLoadingSections = true;
 
   @override
@@ -59,19 +61,27 @@ class _SectionsScreenState extends State<SectionsScreen>
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        List<SectionItem> sections = [];
+        final Map<String, List<SectionItem>> sectionsByLevel = {
+          for (final level in _levels) level: <SectionItem>[],
+        };
+
         for (var item in data) {
           if (item is List && item.length > 1) {
-            // item[0] is category name, item[1] onwards are section objects
+            final level = item.first?.toString() ?? '';
+            final sections = <SectionItem>[];
+
             for (var i = 1; i < item.length; i++) {
               if (item[i] is Map) {
-                sections.add(SectionItem.fromJson(item[i]));
+                sections.add(SectionItem.fromJson(Map<String, dynamic>.from(item[i])));
               }
             }
+
+            sectionsByLevel[level] = sections;
           }
         }
+
         setState(() {
-          _allSections = sections;
+          _sectionsByLevel = sectionsByLevel;
           _isLoadingSections = false;
         });
       } else {
@@ -83,7 +93,7 @@ class _SectionsScreenState extends State<SectionsScreen>
   }
 
   List<SectionItem> _byLevel(String level) {
-    final sections = _allSections.where((s) => s.name.contains(level)).toList();
+    final sections = _sectionsByLevel[level] ?? const <SectionItem>[];
     if (_searchQuery.isEmpty) return sections;
     return sections
         .where(

@@ -29,6 +29,13 @@ class StatItem {
   }
 }
 
+class StatGradeGroup {
+  final String header;
+  final List<StatItem> students;
+
+  const StatGradeGroup({required this.header, required this.students});
+}
+
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
 
@@ -47,7 +54,7 @@ class _StatsScreenState extends State<StatsScreen>
     'PE',
   ];
 
-  Map<String, List<StatItem>> _data = {};
+  Map<String, List<StatGradeGroup>> _data = {};
   bool _isLoading = true;
 
   @override
@@ -67,29 +74,40 @@ class _StatsScreenState extends State<StatsScreen>
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        Map<String, List<StatItem>> parsedData = {};
+        final Map<String, List<StatGradeGroup>> parsedData = {};
 
         for (var item in data) {
           if (item is List && item.length > 1) {
-            // item[0] is subject map, item[1] onwards are grade arrays
-            final subjectMap = item[0] as Map<String, dynamic>;
-            final subject = subjectMap['subject'] as String;
-            final stats = <StatItem>[];
+            final subjectMap = Map<String, dynamic>.from(item[0] as Map);
+            final subject = subjectMap['subject']?.toString() ?? '';
+            final gradeGroups = <StatGradeGroup>[];
 
-            // Process each grade array
             for (var i = 1; i < item.length; i++) {
               if (item[i] is List) {
                 final gradeArray = item[i] as List;
-                // gradeArray[0] is grade map, gradeArray[1] onwards are stat objects
+                if (gradeArray.isEmpty || gradeArray.first is! Map) {
+                  continue;
+                }
+
+                final gradeMap = Map<String, dynamic>.from(gradeArray.first as Map);
+                final header = gradeMap['grade']?.toString() ?? 'Other';
+                final stats = <StatItem>[];
+
                 for (var j = 1; j < gradeArray.length; j++) {
                   if (gradeArray[j] is Map) {
-                    stats.add(StatItem.fromJson(gradeArray[j]));
+                    stats.add(
+                      StatItem.fromJson(Map<String, dynamic>.from(gradeArray[j] as Map)),
+                    );
                   }
                 }
+
+                gradeGroups.add(
+                  StatGradeGroup(header: header, students: stats),
+                );
               }
             }
 
-            parsedData[subject] = stats;
+            parsedData[subject] = gradeGroups;
           }
         }
 
@@ -111,7 +129,7 @@ class _StatsScreenState extends State<StatsScreen>
     super.dispose();
   }
 
-  List<StatItem> _listFor(String subject) => _data[subject] ?? [];
+  List<StatGradeGroup> _listFor(String subject) => _data[subject] ?? const [];
 
   @override
   Widget build(BuildContext context) {
@@ -184,35 +202,33 @@ class _StatsScreenState extends State<StatsScreen>
     );
   }
 
-  Widget _buildRankList(List<StatItem> students) {
-    // Group students by grade/level
-    final groupedStudents = <String, List<StatItem>>{};
-    for (var s in students) {
-      final section = s.section;
-      final gradeMatch = RegExp(r'(Grade \d+)').firstMatch(section);
-      final grade = gradeMatch != null ? gradeMatch.group(1)! : 'Other';
-
-      if (!groupedStudents.containsKey(grade)) {
-        groupedStudents[grade] = [];
-      }
-      groupedStudents[grade]!.add(s);
+  Widget _buildRankList(List<StatGradeGroup> gradeGroups) {
+    if (gradeGroups.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.bar_chart_outlined, size: 56, color: Colors.grey[300]),
+            const SizedBox(height: 12),
+            Text(
+              'No statistics found',
+              style: TextStyle(
+                fontFamily: 'Urbanist',
+                fontSize: 15,
+                color: Colors.grey[400],
+              ),
+            ),
+          ],
+        ),
+      );
     }
-
-    final sortedGrades = groupedStudents.keys.toList()
-      ..sort((a, b) {
-        if (a == 'Other') return 1;
-        if (b == 'Other') return -1;
-        final numA = int.parse(a.split(' ')[1]);
-        final numB = int.parse(b.split(' ')[1]);
-        return numB.compareTo(numA); // Descending order (Grade 12 -> Grade 9)
-      });
 
     return ListView.builder(
       padding: EdgeInsets.zero,
-      itemCount: sortedGrades.length,
+      itemCount: gradeGroups.length,
       itemBuilder: (context, i) {
-        final grade = sortedGrades[i];
-        final gradeStudents = groupedStudents[grade]!;
+        final gradeGroup = gradeGroups[i];
+        final gradeStudents = gradeGroup.students;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,7 +238,7 @@ class _StatsScreenState extends State<StatsScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               color: const Color(0xFFF5F5F5),
               child: Text(
-                grade,
+                gradeGroup.header,
                 style: const TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 14,
@@ -329,7 +345,7 @@ class _StatsScreenState extends State<StatsScreen>
                 ],
               );
             }).toList(),
-            if (i < sortedGrades.length - 1)
+            if (i < gradeGroups.length - 1)
               const Divider(height: 1, color: Color(0xFFEEEEEE)),
           ],
         );

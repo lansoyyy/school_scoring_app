@@ -78,13 +78,7 @@ class _SportsScreenState extends State<SportsScreen> {
   String? _gamesError;
 
   List<GameItem> get _visibleEvents {
-    final selectedDate = _selectedDate;
-    if (selectedDate == null) {
-      return const [];
-    }
-
-    final formattedDate = _formatApiDate(selectedDate);
-    return _allGames.where((game) => game.gameDate == formattedDate).toList();
+    return _allGames;
   }
 
   List<DateTime> get _monthDays {
