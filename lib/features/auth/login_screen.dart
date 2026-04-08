@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../navigation/main_navigation.dart';
 import 'services/auth_api_service.dart';
 import 'signup_screen.dart';
@@ -41,6 +43,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (response.isSuccess) {
+      // Persist the session_id for later security use.
+      if (response.sessionId != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(AppConstants.keySessionId, response.sessionId!);
+      }
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MainNavigation()),

@@ -71,10 +71,7 @@ class AuthApiService {
             const Duration(milliseconds: AppConstants.connectionTimeout),
           );
 
-      return _parseResponse(
-        response: response,
-        expectedSessionId: expectedSessionId,
-      );
+      return _parseResponse(response: response);
     } catch (_) {
       return const AuthApiResponse(
         isSuccess: false,
@@ -86,7 +83,6 @@ class AuthApiService {
 
   AuthApiResponse _parseResponse({
     required http.Response response,
-    required String expectedSessionId,
   }) {
     dynamic decodedBody;
     Map<String, dynamic>? payload;
@@ -105,18 +101,9 @@ class AuthApiService {
     sessionId = payload?['session_id']?.toString();
     status = payload?['status']?.toString();
 
-    final normalizedStatus = status?.toLowerCase() ?? '';
-    final normalizedSession = sessionId?.toLowerCase() ?? '';
-    final normalizedExpectedSession = expectedSessionId.toLowerCase();
-
-    final bool successByBody =
-        normalizedSession == normalizedExpectedSession ||
-        (normalizedSession.startsWith('ok_') &&
-            normalizedStatus == 'success') ||
-        (normalizedExpectedSession == 'ok_login' &&
-            normalizedSession.startsWith('ok_'));
-
-    final bool isSuccess = response.statusCode == 200 && successByBody;
+    // The API signals success via the "allow" field ("true"/"false" string).
+    final String allow = payload?['allow']?.toString().toLowerCase() ?? '';
+    final bool isSuccess = response.statusCode == 200 && allow == 'true';
 
     return AuthApiResponse(
       isSuccess: isSuccess,

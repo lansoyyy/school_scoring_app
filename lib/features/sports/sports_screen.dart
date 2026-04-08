@@ -72,7 +72,7 @@ class _SportsScreenState extends State<SportsScreen> {
     DateTime.now().year,
     DateTime.now().month,
   );
-  DateTime? _selectedDate;
+  DateTime? _selectedDate = DateUtils.dateOnly(DateTime.now());
   List<GameItem> _allGames = [];
   bool _isLoadingGames = true;
   String? _gamesError;
@@ -97,7 +97,7 @@ class _SportsScreenState extends State<SportsScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchGames();
+    _fetchGames(date: DateUtils.dateOnly(DateTime.now()));
   }
 
   Future<void> _fetchGames({DateTime? date}) async {

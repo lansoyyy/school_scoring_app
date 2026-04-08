@@ -15,19 +15,39 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+  // Each element tracks how many times that tab has been tapped.
+  // Incrementing forces a new ValueKey, which rebuilds the screen and
+  // triggers initState (and thus the API call) on every tap.
+  final List<int> _tapCounts = [0, 0, 0, 0, 0];
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    SportsScreen(),
-    LiveScreen(),
-    SectionsScreen(),
-    StatsScreen(),
-  ];
+  void _onNavTap(int index) {
+    setState(() {
+      _currentIndex = index;
+      _tapCounts[index]++;
+    });
+  }
+
+  Widget _buildScreen() {
+    switch (_currentIndex) {
+      case 0:
+        return HomeScreen(key: ValueKey('home_${_tapCounts[0]}'));
+      case 1:
+        return SportsScreen(key: ValueKey('sports_${_tapCounts[1]}'));
+      case 2:
+        return LiveScreen(key: ValueKey('live_${_tapCounts[2]}'));
+      case 3:
+        return SectionsScreen(key: ValueKey('sections_${_tapCounts[3]}'));
+      case 4:
+        return StatsScreen(key: ValueKey('stats_${_tapCounts[4]}'));
+      default:
+        return const SizedBox.shrink();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: _buildScreen(),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -44,45 +64,45 @@ class _MainNavigationState extends State<MainNavigation> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _NavItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home,
-                  label: 'Home',
-                  isActive: _currentIndex == 0,
-                  onTap: () => setState(() => _currentIndex = 0),
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home,
+                      label: 'Home',
+                      isActive: _currentIndex == 0,
+                      onTap: () => _onNavTap(0),
+                    ),
+                    _NavItem(
+                      icon: Icons.calendar_today_outlined,
+                      activeIcon: Icons.calendar_today,
+                      label: 'Games',
+                      isActive: _currentIndex == 1,
+                      onTap: () => _onNavTap(1),
+                    ),
+                    _NavItem(
+                      icon: Icons.play_circle_outline,
+                      activeIcon: Icons.play_circle,
+                      label: 'Live',
+                      isActive: _currentIndex == 2,
+                      onTap: () => _onNavTap(2),
+                    ),
+                    _NavItem(
+                      icon: Icons.people_outline,
+                      activeIcon: Icons.people,
+                      label: 'Sections',
+                      isActive: _currentIndex == 3,
+                      onTap: () => _onNavTap(3),
+                    ),
+                    _NavItem(
+                      icon: Icons.bar_chart_outlined,
+                      activeIcon: Icons.bar_chart,
+                      label: 'Statistics',
+                      isActive: _currentIndex == 4,
+                      onTap: () => _onNavTap(4),
+                    ),
+                  ],
                 ),
-                _NavItem(
-                  icon: Icons.calendar_today_outlined,
-                  activeIcon: Icons.calendar_today,
-                  label: 'Games',
-                  isActive: _currentIndex == 1,
-                  onTap: () => setState(() => _currentIndex = 1),
-                ),
-                _NavItem(
-                  icon: Icons.play_circle_outline,
-                  activeIcon: Icons.play_circle,
-                  label: 'Live',
-                  isActive: _currentIndex == 2,
-                  onTap: () => setState(() => _currentIndex = 2),
-                ),
-                _NavItem(
-                  icon: Icons.people_outline,
-                  activeIcon: Icons.people,
-                  label: 'Sections',
-                  isActive: _currentIndex == 3,
-                  onTap: () => setState(() => _currentIndex = 3),
-                ),
-                _NavItem(
-                  icon: Icons.bar_chart_outlined,
-                  activeIcon: Icons.bar_chart,
-                  label: 'Statistics',
-                  isActive: _currentIndex == 4,
-                  onTap: () => setState(() => _currentIndex = 4),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
         ],
       ),
     );

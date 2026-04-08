@@ -45,6 +45,7 @@ class AppConstants {
 
   // Storage Keys
   static const String keyToken = 'auth_token';
+  static const String keySessionId = 'session_id';
   static const String keyUserId = 'user_id';
   static const String keyUserName = 'user_name';
   static const String keyUserEmail = 'user_email';

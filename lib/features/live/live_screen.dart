@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -112,20 +113,37 @@ class LiveScreen extends StatefulWidget {
 class _LiveScreenState extends State<LiveScreen> {
   List<LiveGameItem> _liveGames = [];
   bool _isLoadingGames = true;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchLiveGames();
+    // Auto-refresh every 15 seconds without showing the loading spinner.
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _fetchLiveGames(silent: true),
+    );
   }
 
-  Future<void> _fetchLiveGames() async {
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchLiveGames({bool silent = false}) async {
+    if (!silent) {
+      setState(() => _isLoadingGames = true);
+    }
     try {
       final response = await http
           .get(Uri.parse('${AppConstants.apiBaseUrl}/live'))
           .timeout(
             const Duration(milliseconds: AppConstants.connectionTimeout),
           );
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -134,10 +152,11 @@ class _LiveScreenState extends State<LiveScreen> {
           _isLoadingGames = false;
         });
       } else {
-        setState(() => _isLoadingGames = false);
+        if (!silent) setState(() => _isLoadingGames = false);
       }
     } catch (e) {
-      setState(() => _isLoadingGames = false);
+      if (!mounted) return;
+      if (!silent) setState(() => _isLoadingGames = false);
     }
   }
 
