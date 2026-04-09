@@ -55,7 +55,9 @@ class _MainNavigationState extends State<MainNavigation> {
           Container(
             decoration: const BoxDecoration(
               color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFE8E8E8), width: 1)),
+              border: Border(
+                top: BorderSide(color: Color(0xFFE8E8E8), width: 1),
+              ),
             ),
             child: SafeArea(
               child: SizedBox(
