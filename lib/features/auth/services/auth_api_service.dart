@@ -9,6 +9,7 @@ class AuthApiResponse {
   final String message;
   final String? sessionId;
   final String? status;
+  final String? generatedPassword;
   final int statusCode;
   final dynamic rawData;
 
@@ -18,6 +19,7 @@ class AuthApiResponse {
     required this.statusCode,
     this.sessionId,
     this.status,
+    this.generatedPassword,
     this.rawData,
   });
 }
@@ -31,33 +33,25 @@ class AuthApiService {
   }) {
     return _request(
       endpoint: 'login',
-      expectedSessionId: 'Ok_Login',
       params: {'username': username, 'password': password},
     );
   }
 
-  Future<AuthApiResponse> signup({
-    required String username,
-    required String password,
-  }) {
-    return _request(
-      endpoint: 'signup',
-      expectedSessionId: 'Ok_Signup',
-      params: <String, String>{'username': username, 'password': password},
-    );
+  Future<AuthApiResponse> signup({required String username, String? password}) {
+    final params = <String, String>{'username': username};
+    if (password != null && password.isNotEmpty) {
+      params['password'] = password;
+    }
+
+    return _request(endpoint: 'signup', params: params);
   }
 
   Future<AuthApiResponse> changePassword({required String username}) {
-    return _request(
-      endpoint: 'changepassword',
-      expectedSessionId: 'Ok_ChangePassword',
-      params: {'username': username},
-    );
+    return _request(endpoint: 'changepassword', params: {'username': username});
   }
 
   Future<AuthApiResponse> _request({
     required String endpoint,
-    required String expectedSessionId,
     required Map<String, String> params,
   }) async {
     final uri = Uri.parse(
@@ -81,14 +75,13 @@ class AuthApiService {
     }
   }
 
-  AuthApiResponse _parseResponse({
-    required http.Response response,
-  }) {
+  AuthApiResponse _parseResponse({required http.Response response}) {
     dynamic decodedBody;
     Map<String, dynamic>? payload;
     String message = 'Request failed. Please try again.';
     String? sessionId;
     String? status;
+    String? generatedPassword;
 
     try {
       decodedBody = json.decode(response.body);
@@ -100,6 +93,7 @@ class AuthApiService {
     message = payload?['message']?.toString() ?? message;
     sessionId = payload?['session_id']?.toString();
     status = payload?['status']?.toString();
+    generatedPassword = payload?['password']?.toString();
 
     // The API signals success via the "allow" field ("true"/"false" string).
     final String allow = payload?['allow']?.toString().toLowerCase() ?? '';
@@ -110,6 +104,7 @@ class AuthApiService {
       message: message,
       sessionId: sessionId,
       status: status,
+      generatedPassword: generatedPassword,
       statusCode: response.statusCode,
       rawData: decodedBody,
     );

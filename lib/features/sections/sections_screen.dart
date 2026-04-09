@@ -19,12 +19,19 @@ class SectionItem {
 
   factory SectionItem.fromJson(Map<String, dynamic> json) {
     return SectionItem(
-      id: json['id'] as int,
-      slink: json['slink'] as String,
-      name: json['name'] as String,
-      adviser: json['adviser'] as String,
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      slink: json['slink']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      adviser: json['adviser']?.toString() ?? '',
     );
   }
+}
+
+class SectionGroup {
+  final String grade;
+  final List<SectionItem> sections;
+
+  const SectionGroup({required this.grade, required this.sections});
 }
 
 class SectionsScreen extends StatefulWidget {
@@ -34,20 +41,14 @@ class SectionsScreen extends StatefulWidget {
   State<SectionsScreen> createState() => _SectionsScreenState();
 }
 
-class _SectionsScreenState extends State<SectionsScreen>
-    with SingleTickerProviderStateMixin {
-  static const List<String> _levels = ['PREP', 'ELEM', 'JHS', 'SHS'];
-
-  late TabController _tabController;
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-  Map<String, List<SectionItem>> _sectionsByLevel = {};
+class _SectionsScreenState extends State<SectionsScreen> {
+  final String _searchQuery = '';
+  List<SectionGroup> _sectionGroups = const <SectionGroup>[];
   bool _isLoadingSections = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
     _fetchSections();
   }
 
@@ -59,41 +60,84 @@ class _SectionsScreenState extends State<SectionsScreen>
             const Duration(milliseconds: AppConstants.connectionTimeout),
           );
 
+      if (!mounted) {
+        return;
+      }
+
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        final Map<String, List<SectionItem>> sectionsByLevel = {
-          for (final level in _levels) level: <SectionItem>[],
-        };
-
-        for (var item in data) {
-          if (item is List && item.length > 1) {
-            final level = item.first?.toString() ?? '';
-            final sections = <SectionItem>[];
-
-            for (var i = 1; i < item.length; i++) {
-              if (item[i] is Map) {
-                sections.add(SectionItem.fromJson(Map<String, dynamic>.from(item[i])));
-              }
-            }
-
-            sectionsByLevel[level] = sections;
-          }
-        }
+        final dynamic decodedBody = json.decode(response.body);
+        final sectionGroups = _parseSectionGroups(decodedBody);
 
         setState(() {
-          _sectionsByLevel = sectionsByLevel;
+          _sectionGroups = sectionGroups;
           _isLoadingSections = false;
         });
       } else {
         setState(() => _isLoadingSections = false);
       }
-    } catch (e) {
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
       setState(() => _isLoadingSections = false);
     }
   }
 
-  List<SectionItem> _byLevel(String level) {
-    final sections = _sectionsByLevel[level] ?? const <SectionItem>[];
+  List<SectionGroup> _parseSectionGroups(dynamic decodedBody) {
+    if (decodedBody is! List) {
+      return const <SectionGroup>[];
+    }
+
+    final sectionGroups = <SectionGroup>[];
+
+    for (final group in decodedBody) {
+      if (group is! List || group.isEmpty) {
+        continue;
+      }
+
+      final header = group.first;
+      if (header is! Map) {
+        continue;
+      }
+
+      final headerMap = Map<String, dynamic>.from(header);
+      final grade = _extractHeaderValue(headerMap, preferredKey: 'grade');
+      if (grade.isEmpty) {
+        continue;
+      }
+
+      final sections = group
+          .skip(1)
+          .whereType<Map>()
+          .map((item) => SectionItem.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+
+      sectionGroups.add(SectionGroup(grade: grade, sections: sections));
+    }
+
+    return sectionGroups;
+  }
+
+  String _extractHeaderValue(
+    Map<String, dynamic> data, {
+    required String preferredKey,
+  }) {
+    final preferredValue = data[preferredKey]?.toString().trim() ?? '';
+    if (preferredValue.isNotEmpty) {
+      return preferredValue;
+    }
+
+    for (final value in data.values) {
+      final text = value?.toString().trim() ?? '';
+      if (text.isNotEmpty) {
+        return text;
+      }
+    }
+
+    return '';
+  }
+
+  List<SectionItem> _filteredSections(List<SectionItem> sections) {
     if (_searchQuery.isEmpty) return sections;
     return sections
         .where(
@@ -105,23 +149,39 @@ class _SectionsScreenState extends State<SectionsScreen>
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         children: [
           _buildHeader(),
+          Expanded(child: _buildBody(context)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    if (_isLoadingSections) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+      );
+    }
+
+    if (_sectionGroups.isEmpty) {
+      return _buildEmptyState('No sections found');
+    }
+
+    return DefaultTabController(
+      key: ValueKey(_sectionGroups.map((group) => group.grade).join('|')),
+      length: _sectionGroups.length,
+      child: Column(
+        children: [
           Container(
             color: Colors.white,
             child: TabBar(
-              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
               labelStyle: const TextStyle(
                 fontFamily: 'Urbanist',
                 fontSize: 15,
@@ -137,29 +197,23 @@ class _SectionsScreenState extends State<SectionsScreen>
               indicatorColor: const Color(0xFFD4A017),
               indicatorWeight: 3,
               indicatorSize: TabBarIndicatorSize.tab,
-              tabs: const [
-                Tab(text: 'PREP'),
-                Tab(text: 'ELEM'),
-                Tab(text: 'JHS'),
-                Tab(text: 'SHS'),
-              ],
+              tabs: _sectionGroups
+                  .map((group) => Tab(text: group.grade))
+                  .toList(),
             ),
           ),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
-            child: _isLoadingSections
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+            child: TabBarView(
+              children: _sectionGroups
+                  .map(
+                    (group) => _buildSectionList(
+                      _filteredSections(group.sections),
+                      context,
+                    ),
                   )
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildSectionList(_byLevel('PREP'), context),
-                      _buildSectionList(_byLevel('ELEM'), context),
-                      _buildSectionList(_byLevel('JHS'), context),
-                      _buildSectionList(_byLevel('SHS'), context),
-                    ],
-                  ),
+                  .toList(),
+            ),
           ),
         ],
       ),
@@ -193,23 +247,7 @@ class _SectionsScreenState extends State<SectionsScreen>
 
   Widget _buildSectionList(List<SectionItem> sections, BuildContext context) {
     if (sections.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.school_outlined, size: 56, color: Colors.grey[300]),
-            const SizedBox(height: 12),
-            Text(
-              'No sections found',
-              style: TextStyle(
-                fontFamily: 'Urbanist',
-                fontSize: 15,
-                color: Colors.grey[400],
-              ),
-            ),
-          ],
-        ),
-      );
+      return _buildEmptyState('No sections found');
     }
 
     return ListView.separated(
@@ -296,6 +334,26 @@ class _SectionsScreenState extends State<SectionsScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.school_outlined, size: 56, color: Colors.grey[300]),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: TextStyle(
+              fontFamily: 'Urbanist',
+              fontSize: 15,
+              color: Colors.grey[400],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -20,11 +20,11 @@ class StatItem {
 
   factory StatItem.fromJson(Map<String, dynamic> json) {
     return StatItem(
-      id: json['id'] as int,
-      slink: json['slink'] as String,
-      name: json['name'] as String,
-      section: json['section'] as String,
-      grade: json['grade'] as String,
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      slink: json['slink']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      section: json['section']?.toString() ?? '',
+      grade: json['grade']?.toString() ?? '',
     );
   }
 }
@@ -36,6 +36,13 @@ class StatGradeGroup {
   const StatGradeGroup({required this.header, required this.students});
 }
 
+class SubjectStatistics {
+  final String subject;
+  final List<StatGradeGroup> gradeGroups;
+
+  const SubjectStatistics({required this.subject, required this.gradeGroups});
+}
+
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
 
@@ -43,24 +50,13 @@ class StatsScreen extends StatefulWidget {
   State<StatsScreen> createState() => _StatsScreenState();
 }
 
-class _StatsScreenState extends State<StatsScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final List<String> _subjects = [
-    'ALL',
-    'ENGLISH',
-    'SCIENCE',
-    'FILIPINO',
-    'PE',
-  ];
-
-  Map<String, List<StatGradeGroup>> _data = {};
+class _StatsScreenState extends State<StatsScreen> {
+  List<SubjectStatistics> _subjects = const <SubjectStatistics>[];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _subjects.length, vsync: this);
     _fetchStatistics();
   }
 
@@ -72,64 +68,111 @@ class _StatsScreenState extends State<StatsScreen>
             const Duration(milliseconds: AppConstants.connectionTimeout),
           );
 
+      if (!mounted) {
+        return;
+      }
+
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        final Map<String, List<StatGradeGroup>> parsedData = {};
-
-        for (var item in data) {
-          if (item is List && item.length > 1) {
-            final subjectMap = Map<String, dynamic>.from(item[0] as Map);
-            final subject = subjectMap['subject']?.toString() ?? '';
-            final gradeGroups = <StatGradeGroup>[];
-
-            for (var i = 1; i < item.length; i++) {
-              if (item[i] is List) {
-                final gradeArray = item[i] as List;
-                if (gradeArray.isEmpty || gradeArray.first is! Map) {
-                  continue;
-                }
-
-                final gradeMap = Map<String, dynamic>.from(gradeArray.first as Map);
-                final header = gradeMap['grade']?.toString() ?? 'Other';
-                final stats = <StatItem>[];
-
-                for (var j = 1; j < gradeArray.length; j++) {
-                  if (gradeArray[j] is Map) {
-                    stats.add(
-                      StatItem.fromJson(Map<String, dynamic>.from(gradeArray[j] as Map)),
-                    );
-                  }
-                }
-
-                gradeGroups.add(
-                  StatGradeGroup(header: header, students: stats),
-                );
-              }
-            }
-
-            parsedData[subject] = gradeGroups;
-          }
-        }
+        final dynamic decodedBody = json.decode(response.body);
+        final subjects = _parseSubjects(decodedBody);
 
         setState(() {
-          _data = parsedData;
+          _subjects = subjects;
           _isLoading = false;
         });
       } else {
         setState(() => _isLoading = false);
       }
-    } catch (e) {
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
       setState(() => _isLoading = false);
     }
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  List<SubjectStatistics> _parseSubjects(dynamic decodedBody) {
+    if (decodedBody is! List) {
+      return const <SubjectStatistics>[];
+    }
+
+    final subjects = <SubjectStatistics>[];
+
+    for (final item in decodedBody) {
+      if (item is! List || item.isEmpty) {
+        continue;
+      }
+
+      final header = item.first;
+      if (header is! Map) {
+        continue;
+      }
+
+      final headerMap = Map<String, dynamic>.from(header);
+      final subject = _extractHeaderValue(headerMap, preferredKey: 'subject');
+      if (subject.isEmpty) {
+        continue;
+      }
+
+      final gradeGroups = <StatGradeGroup>[];
+
+      for (final group in item.skip(1)) {
+        if (group is! List || group.isEmpty) {
+          continue;
+        }
+
+        final gradeHeader = group.first;
+        if (gradeHeader is! Map) {
+          continue;
+        }
+
+        final gradeHeaderMap = Map<String, dynamic>.from(gradeHeader);
+        final gradeLabel = _extractHeaderValue(
+          gradeHeaderMap,
+          preferredKey: 'grade',
+        );
+        if (gradeLabel.isEmpty) {
+          continue;
+        }
+
+        final students = group
+            .skip(1)
+            .whereType<Map>()
+            .map(
+              (student) =>
+                  StatItem.fromJson(Map<String, dynamic>.from(student)),
+            )
+            .toList();
+
+        gradeGroups.add(StatGradeGroup(header: gradeLabel, students: students));
+      }
+
+      subjects.add(
+        SubjectStatistics(subject: subject, gradeGroups: gradeGroups),
+      );
+    }
+
+    return subjects;
   }
 
-  List<StatGradeGroup> _listFor(String subject) => _data[subject] ?? const [];
+  String _extractHeaderValue(
+    Map<String, dynamic> data, {
+    required String preferredKey,
+  }) {
+    final preferredValue = data[preferredKey]?.toString().trim() ?? '';
+    if (preferredValue.isNotEmpty) {
+      return preferredValue;
+    }
+
+    for (final value in data.values) {
+      final text = value?.toString().trim() ?? '';
+      if (text.isNotEmpty) {
+        return text;
+      }
+    }
+
+    return '';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,10 +181,31 @@ class _StatsScreenState extends State<StatsScreen>
       body: Column(
         children: [
           _buildHeader(),
+          Expanded(child: _buildBody()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+      );
+    }
+
+    if (_subjects.isEmpty) {
+      return _buildEmptyState('No statistics found');
+    }
+
+    return DefaultTabController(
+      key: ValueKey(_subjects.map((subject) => subject.subject).join('|')),
+      length: _subjects.length,
+      child: Column(
+        children: [
           Container(
             color: Colors.white,
             child: TabBar(
-              controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               labelStyle: const TextStyle(
@@ -159,21 +223,18 @@ class _StatsScreenState extends State<StatsScreen>
               indicatorColor: const Color(0xFFD4A017),
               indicatorWeight: 3,
               indicatorSize: TabBarIndicatorSize.label,
-              tabs: _subjects.map((s) => Tab(text: s)).toList(),
+              tabs: _subjects
+                  .map((subject) => Tab(text: subject.subject))
+                  .toList(),
             ),
           ),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFD4A017)),
-                  )
-                : TabBarView(
-                    controller: _tabController,
-                    children: _subjects
-                        .map((s) => _buildRankList(_listFor(s)))
-                        .toList(),
-                  ),
+            child: TabBarView(
+              children: _subjects
+                  .map((subject) => _buildRankList(subject.gradeGroups))
+                  .toList(),
+            ),
           ),
         ],
       ),
@@ -204,23 +265,7 @@ class _StatsScreenState extends State<StatsScreen>
 
   Widget _buildRankList(List<StatGradeGroup> gradeGroups) {
     if (gradeGroups.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.bar_chart_outlined, size: 56, color: Colors.grey[300]),
-            const SizedBox(height: 12),
-            Text(
-              'No statistics found',
-              style: TextStyle(
-                fontFamily: 'Urbanist',
-                fontSize: 15,
-                color: Colors.grey[400],
-              ),
-            ),
-          ],
-        ),
-      );
+      return _buildEmptyState('No statistics found');
     }
 
     return ListView.builder(
@@ -290,8 +335,7 @@ class _StatsScreenState extends State<StatsScreen>
                               errorBuilder: (context, error, stackTrace) {
                                 return Center(
                                   child: Text(
-                                    s.name.split(' ').first[0] +
-                                        s.name.split(' ').last[0],
+                                    _initialsFor(s.name),
                                     style: const TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
@@ -344,12 +388,51 @@ class _StatsScreenState extends State<StatsScreen>
                   ),
                 ],
               );
-            }).toList(),
+            }),
             if (i < gradeGroups.length - 1)
               const Divider(height: 1, color: Color(0xFFEEEEEE)),
           ],
         );
       },
+    );
+  }
+
+  String _initialsFor(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) {
+      return '?';
+    }
+
+    if (parts.length == 1) {
+      return parts.first.substring(0, 1).toUpperCase();
+    }
+
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
+        .toUpperCase();
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.bar_chart_outlined, size: 56, color: Colors.grey[300]),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: TextStyle(
+              fontFamily: 'Urbanist',
+              fontSize: 15,
+              color: Colors.grey[400],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
