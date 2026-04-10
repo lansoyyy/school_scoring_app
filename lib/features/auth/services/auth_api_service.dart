@@ -46,8 +46,25 @@ class AuthApiService {
     return _request(endpoint: 'signup', params: params);
   }
 
-  Future<AuthApiResponse> changePassword({required String username}) {
-    return _request(endpoint: 'changepassword', params: {'username': username});
+  Future<AuthApiResponse> forgotPassword({required String username}) {
+    return _request(endpoint: 'forgotpassword', params: {'username': username});
+  }
+
+  Future<AuthApiResponse> changePassword({
+    required String username,
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) {
+    return _request(
+      endpoint: 'changepassword',
+      params: {
+        'username': username,
+        'password': currentPassword,
+        'new_password': newPassword,
+        'confirm_password': confirmPassword,
+      },
+    );
   }
 
   Future<AuthApiResponse> _request({
@@ -93,7 +110,10 @@ class AuthApiService {
     message = payload?['message']?.toString() ?? message;
     sessionId = payload?['session_id']?.toString();
     status = payload?['status']?.toString();
-    generatedPassword = payload?['password']?.toString();
+    generatedPassword =
+        payload?['password']?.toString() ??
+        payload?['new_password']?.toString() ??
+        payload?['generated_password']?.toString();
 
     // The API signals success via the "allow" field ("true"/"false" string).
     final String allow = payload?['allow']?.toString().toLowerCase() ?? '';

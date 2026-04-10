@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
+import 'forgot_password_login_screen.dart';
 import 'services/auth_api_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -14,8 +19,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   bool _isLoading = false;
-  bool _emailSent = false;
-  String _successMessage = 'Successful';
 
   @override
   void dispose() {
@@ -23,27 +26,79 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _sendReset() async {
-    if (!_formKey.currentState!.validate()) return;
+  void _trimEmail() {
+    final trimmedEmail = _emailCtrl.text.trim();
+    if (trimmedEmail == _emailCtrl.text) {
+      return;
+    }
+
+    _emailCtrl.value = TextEditingValue(
+      text: trimmedEmail,
+      selection: TextSelection.collapsed(offset: trimmedEmail.length),
+    );
+  }
+
+  String? _validateEmail(String? value) {
+    final rawValue = value ?? '';
+    final trimmedValue = rawValue.trim();
+
+    if (trimmedValue.isEmpty) {
+      return 'Email address is required';
+    }
+
+    if (rawValue.contains(RegExp(r'\s'))) {
+      return 'Email address must not contain spaces';
+    }
+
+    if (!RegExp(AppConstants.emailRegex).hasMatch(trimmedValue)) {
+      return 'Enter a valid email address';
+    }
+
+    return null;
+  }
+
+  Future<void> _sendReset() async {
+    if (_isLoading) {
+      return;
+    }
+
+    _trimEmail();
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     setState(() => _isLoading = true);
 
-    final response = await _authApi.changePassword(
-      username: _emailCtrl.text.trim(),
-    );
+    final email = _emailCtrl.text.trim();
+    final responseFuture = _authApi.forgotPassword(username: email);
+    final delayFuture = Future<void>.delayed(const Duration(seconds: 7));
+    final results = await Future.wait<Object?>(<Future<Object?>>[
+      responseFuture,
+      delayFuture,
+    ]);
+
+    final response = results.first as AuthApiResponse;
 
     if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (response.isSuccess) {
-      setState(() {
-        _emailSent = true;
-        _successMessage = response.message;
-      });
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(AppConstants.keyUserEmail, email);
+      await prefs.setString(AppConstants.keySignupEmail, email);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response.message),
-          backgroundColor: AppColors.success,
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ForgotPasswordLoginScreen(
+            initialEmail: email,
+            initialPassword: response.generatedPassword ?? '',
+            successMessage: response.message,
+          ),
         ),
       );
       return;
@@ -61,103 +116,49 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          _buildHeader(context),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: _emailSent ? _buildSuccessState() : _buildFormState(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      height: 160,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.gray800, AppColors.gray700, AppColors.gray600],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  color: AppColors.textWhite,
-                  size: 20,
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Forgot Password',
-                      style: const TextStyle(
-                        fontFamily: 'Urbanist',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textWhite,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Don Stevens Institute',
-                      style: TextStyle(
-                        fontFamily: 'Urbanist',
-                        fontSize: 13,
-                        color: AppColors.textWhite.withOpacity(0.7),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 48),
-            ],
-          ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+          child: _buildFormState(context),
         ),
       ),
     );
   }
 
-  Widget _buildFormState() {
+  Widget _buildFormState(BuildContext context) {
     return Form(
       key: _formKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 24),
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.gray100,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Icon(
-              Icons.lock_reset_outlined,
-              color: AppColors.gray600,
-              size: 36,
+          IconButton(
+            onPressed: _isLoading ? null : () => Navigator.pop(context),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: AppColors.textPrimary,
+              size: 24,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
+          Center(
+            child: Container(
+              width: 118,
+              height: 106,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: AppColors.textPrimary, width: 2),
+              ),
+              padding: const EdgeInsets.all(18),
+              child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
+            ),
+          ),
+          const SizedBox(height: 56),
           const Text(
-            'Reset Your Password',
+            'Forgot Password',
             style: TextStyle(
               fontFamily: 'Urbanist',
               fontSize: 24,
@@ -168,7 +169,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 8),
           Text(
             'Enter email address associated with your account. We\'ll send you a link to reset your password.',
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Urbanist',
               fontSize: 14,
               color: AppColors.textSecondary,
@@ -176,205 +177,112 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          const Text(
-            'Email Address',
-            style: TextStyle(
-              fontFamily: 'Urbanist',
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
+          _buildLabel('Email Address'),
           const SizedBox(height: 8),
           TextFormField(
             controller: _emailCtrl,
             keyboardType: TextInputType.emailAddress,
-            style: const TextStyle(fontFamily: 'Urbanist'),
-            decoration: InputDecoration(
-              hintText: 'Enter your email',
-              hintStyle: TextStyle(
-                fontFamily: 'Urbanist',
-                fontSize: 14,
-                color: AppColors.textTertiary,
-              ),
-              prefixIcon: Icon(
-                Icons.email_outlined,
-                color: AppColors.textTertiary,
-                size: 20,
-              ),
-              filled: true,
-              fillColor: AppColors.inputBackground,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.error),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.error, width: 2),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+            textInputAction: TextInputAction.done,
+            enabled: !_isLoading,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.deny(RegExp(r'\s')),
+            ],
+            onEditingComplete: _trimEmail,
+            style: const TextStyle(
+              fontFamily: 'Urbanist',
+              fontSize: 16,
+              color: AppColors.textPrimary,
             ),
-            validator: (v) =>
-                (v == null || v.isEmpty) ? 'Email is required' : null,
+            decoration: _inputDecoration(
+              'Enter your email',
+              Icons.email_outlined,
+            ),
+            validator: _validateEmail,
           ),
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
-            height: 52,
+            height: 56,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _sendReset,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textWhite,
+                disabledBackgroundColor: AppColors.buttonDisabled,
+                disabledForegroundColor: AppColors.buttonTextDisabled,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 elevation: 0,
               ),
               child: _isLoading
                   ? const SizedBox(
-                      width: 22,
-                      height: 22,
+                      width: 24,
+                      height: 24,
                       child: CircularProgressIndicator(
                         color: AppColors.textWhite,
-                        strokeWidth: 2.5,
+                        strokeWidth: 2.4,
                       ),
                     )
                   : const Text(
-                      'Send Reset Link',
+                      'Submit',
                       style: TextStyle(
                         fontFamily: 'Urbanist',
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textWhite,
                       ),
                     ),
             ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Remember your password? ',
-                style: TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: const Text(
-                  'Sign In',
-                  style: TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSuccessState() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const SizedBox(height: 48),
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            color: AppColors.successLight,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.mark_email_read_outlined,
-            color: AppColors.success,
-            size: 50,
-          ),
-        ),
-        const SizedBox(height: 28),
-        const Text(
-          'Check Your Email',
-          style: TextStyle(
-            fontFamily: 'Urbanist',
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          '$_successMessage\nfor ${_emailCtrl.text}',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: 'Urbanist',
-            fontSize: 14,
-            color: AppColors.textSecondary,
-            height: 1.6,
-          ),
-        ),
-        const SizedBox(height: 40),
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              'Back to Sign In',
-              style: TextStyle(
-                fontFamily: 'Urbanist',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textWhite,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: _sendReset,
-          child: Text(
-            'Didn\'t receive email? Resend',
-            style: TextStyle(
-              fontFamily: 'Urbanist',
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-      ],
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontFamily: 'Urbanist',
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String hint, IconData icon) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(
+        fontFamily: 'Urbanist',
+        fontSize: 16,
+        color: AppColors.textTertiary,
+      ),
+      prefixIcon: Icon(icon, color: AppColors.textTertiary, size: 22),
+      filled: true,
+      fillColor: const Color(0xFFF8F9FC),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.error, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
     );
   }
 }

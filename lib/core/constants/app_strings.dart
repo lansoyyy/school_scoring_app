@@ -74,7 +74,7 @@ class AppStrings {
   static const String rememberMe = 'Remember Me';
   static const String orContinueWith = 'Or continue with';
   static const String alreadyHaveAccount = 'Already have an account?';
-  static const String dontHaveAccount = "Don't have an account?";
+  static const String dontHaveAccount = "Do not have an account?";
 
   // Navigation
   static const String home = 'Home';

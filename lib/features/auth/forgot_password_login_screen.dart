@@ -6,12 +6,12 @@ import '../../core/constants/app_constants.dart';
 import '../../navigation/main_navigation.dart';
 import 'services/auth_api_service.dart';
 
-class SignupLoginScreen extends StatefulWidget {
+class ForgotPasswordLoginScreen extends StatefulWidget {
   final String initialEmail;
   final String initialPassword;
   final String? successMessage;
 
-  const SignupLoginScreen({
+  const ForgotPasswordLoginScreen({
     super.key,
     required this.initialEmail,
     required this.initialPassword,
@@ -19,10 +19,11 @@ class SignupLoginScreen extends StatefulWidget {
   });
 
   @override
-  State<SignupLoginScreen> createState() => _SignupLoginScreenState();
+  State<ForgotPasswordLoginScreen> createState() =>
+      _ForgotPasswordLoginScreenState();
 }
 
-class _SignupLoginScreenState extends State<SignupLoginScreen> {
+class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
   final AuthApiService _authApi = const AuthApiService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailCtrl = TextEditingController();
@@ -93,8 +94,9 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
 
     setState(() => _isLoading = true);
 
+    final email = _emailCtrl.text.trim();
     final response = await _authApi.login(
-      username: _emailCtrl.text.trim(),
+      username: email,
       password: _passCtrl.text,
     );
 
@@ -106,11 +108,8 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
 
     if (response.isSuccess) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(AppConstants.keyUserEmail, _emailCtrl.text.trim());
-      await prefs.setString(
-        AppConstants.keySignupEmail,
-        _emailCtrl.text.trim(),
-      );
+      await prefs.setString(AppConstants.keyUserEmail, email);
+      await prefs.setString(AppConstants.keySignupEmail, email);
 
       if (response.sessionId != null && response.sessionId!.isNotEmpty) {
         await prefs.setString(AppConstants.keySessionId, response.sessionId!);

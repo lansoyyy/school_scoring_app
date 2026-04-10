@@ -4,25 +4,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
-import '../../navigation/main_navigation.dart';
-import 'forgot_password_screen.dart';
 import 'services/auth_api_service.dart';
-import 'signup_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class ChangePasswordScreen extends StatefulWidget {
+  const ChangePasswordScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final AuthApiService _authApi = const AuthApiService();
-  final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
-  bool _obscurePass = true;
-  bool _rememberMe = false;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailCtrl = TextEditingController();
+  final TextEditingController _currentPasswordCtrl = TextEditingController();
+  final TextEditingController _newPasswordCtrl = TextEditingController();
+  final TextEditingController _confirmPasswordCtrl = TextEditingController();
+  bool _obscureCurrentPassword = true;
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
   @override
@@ -31,20 +31,15 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadSavedEmail();
   }
 
-  @override
-  void dispose() {
-    _emailCtrl.dispose();
-    _passCtrl.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadSavedEmail() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedEmail = (prefs.getString(AppConstants.keyUserEmail) ?? '')
+    final savedUserEmail = (prefs.getString(AppConstants.keyUserEmail) ?? '')
         .trim();
-    final fallbackEmail = (prefs.getString(AppConstants.keySignupEmail) ?? '')
-        .trim();
-    final emailToLoad = savedEmail.isNotEmpty ? savedEmail : fallbackEmail;
+    final savedSignupEmail =
+        (prefs.getString(AppConstants.keySignupEmail) ?? '').trim();
+    final emailToLoad = savedUserEmail.isNotEmpty
+        ? savedUserEmail
+        : savedSignupEmail;
 
     if (!mounted || emailToLoad.isEmpty) {
       return;
@@ -56,9 +51,18 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _currentPasswordCtrl.dispose();
+    _newPasswordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
+    super.dispose();
+  }
+
   void _trimEmail() {
     final trimmedEmail = _emailCtrl.text.trim();
-    if (_emailCtrl.text == trimmedEmail) {
+    if (trimmedEmail == _emailCtrl.text) {
       return;
     }
 
@@ -87,19 +91,30 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  Future<void> _login() async {
+  Future<void> _submit() async {
+    if (_isLoading) {
+      return;
+    }
+
     _trimEmail();
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final email = _emailCtrl.text.trim();
-
-    final response = await _authApi.login(
+    final response = await _authApi.changePassword(
       username: email,
-      password: _passCtrl.text,
+      currentPassword: _currentPasswordCtrl.text,
+      newPassword: _newPasswordCtrl.text,
+      confirmPassword: _confirmPasswordCtrl.text,
     );
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
+
     setState(() => _isLoading = false);
 
     if (response.isSuccess) {
@@ -107,14 +122,19 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString(AppConstants.keyUserEmail, email);
       await prefs.setString(AppConstants.keySignupEmail, email);
 
-      if (response.sessionId != null && response.sessionId!.isNotEmpty) {
-        await prefs.setString(AppConstants.keySessionId, response.sessionId!);
+      _currentPasswordCtrl.clear();
+      _newPasswordCtrl.clear();
+      _confirmPasswordCtrl.clear();
+
+      if (!mounted) {
+        return;
       }
 
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainNavigation()),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: AppColors.success,
+        ),
       );
       return;
     }
@@ -133,21 +153,31 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 14, 24, 32),
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           child: Form(
             key: _formKey,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 6),
+                IconButton(
+                  onPressed: _isLoading ? null : () => Navigator.pop(context),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new,
+                    color: AppColors.textPrimary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 18),
                 Center(
                   child: Container(
-                    width: 138,
-                    height: 118,
+                    width: 118,
+                    height: 106,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(22),
                       border: Border.all(
                         color: AppColors.textPrimary,
                         width: 2,
@@ -160,28 +190,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 52),
+                const SizedBox(height: 56),
                 const Text(
-                  'Welcome back!',
+                  'Change Password',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
-                    fontSize: 26,
+                    fontSize: 24,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Sign in to your account',
-                  style: TextStyle(
-                    fontFamily: 'Urbanist',
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
                 const SizedBox(height: 30),
                 _buildLabel('Email Address'),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
@@ -190,24 +211,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.deny(RegExp(r'\s')),
                   ],
-                  onEditingComplete: _trimEmail,
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 16,
                     color: AppColors.textPrimary,
                   ),
+                  onEditingComplete: _trimEmail,
                   decoration: _inputDecoration(
-                    'Enter email address',
+                    'Enter your email',
                     Icons.email_outlined,
                   ),
                   validator: _validateEmail,
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 20),
                 _buildLabel('Password'),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 TextFormField(
-                  controller: _passCtrl,
-                  obscureText: _obscurePass,
+                  controller: _currentPasswordCtrl,
+                  obscureText: _obscureCurrentPassword,
                   enabled: !_isLoading,
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
@@ -216,89 +237,118 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   decoration:
                       _inputDecoration(
-                        'Enter password',
+                        'Enter your password',
                         Icons.lock_outline,
                       ).copyWith(
                         suffixIcon: IconButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () => setState(
+                                  () => _obscureCurrentPassword =
+                                      !_obscureCurrentPassword,
+                                ),
                           icon: Icon(
-                            _obscurePass
+                            _obscureCurrentPassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
                             color: AppColors.textTertiary,
                           ),
+                        ),
+                      ),
+                  validator: (value) {
+                    if ((value ?? '').isEmpty) {
+                      return 'Current password is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                _buildLabel('New Password'),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _newPasswordCtrl,
+                  obscureText: _obscureNewPassword,
+                  enabled: !_isLoading,
+                  style: const TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration:
+                      _inputDecoration(
+                        'Enter your password',
+                        Icons.lock_outline,
+                      ).copyWith(
+                        suffixIcon: IconButton(
                           onPressed: _isLoading
                               ? null
                               : () => setState(
-                                  () => _obscurePass = !_obscurePass,
+                                  () => _obscureNewPassword =
+                                      !_obscureNewPassword,
                                 ),
+                          icon: Icon(
+                            _obscureNewPassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: AppColors.textTertiary,
+                          ),
                         ),
                       ),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Password is required' : null,
+                  validator: (value) {
+                    if ((value ?? '').isEmpty) {
+                      return 'New password is required';
+                    }
+                    return null;
+                  },
                 ),
-                const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Checkbox(
-                            value: _rememberMe,
-                            activeColor: AppColors.primary,
-                            side: const BorderSide(
-                              color: AppColors.textPrimary,
-                              width: 2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            onChanged: _isLoading
-                                ? null
-                                : (v) =>
-                                      setState(() => _rememberMe = v ?? false),
+                const SizedBox(height: 20),
+                _buildLabel('Confirm Password'),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _confirmPasswordCtrl,
+                  obscureText: _obscureConfirmPassword,
+                  enabled: !_isLoading,
+                  style: const TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration:
+                      _inputDecoration(
+                        'Enter your password',
+                        Icons.lock_outline,
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () => setState(
+                                  () => _obscureConfirmPassword =
+                                      !_obscureConfirmPassword,
+                                ),
+                          icon: Icon(
+                            _obscureConfirmPassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: AppColors.textTertiary,
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Remember me',
-                          style: TextStyle(
-                            fontFamily: 'Urbanist',
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const ForgotPasswordScreen(),
-                              ),
-                            ),
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
                         ),
                       ),
-                    ),
-                  ],
+                  validator: (value) {
+                    if ((value ?? '').isEmpty) {
+                      return 'Confirm password is required';
+                    }
+                    if (value != _newPasswordCtrl.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 28),
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
+                    onPressed: _isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.textWhite,
@@ -315,51 +365,18 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 24,
                             child: CircularProgressIndicator(
                               color: AppColors.textWhite,
-                              strokeWidth: 2.5,
+                              strokeWidth: 2.4,
                             ),
                           )
                         : const Text(
-                            'Sign In',
+                            'Submit',
                             style: TextStyle(
                               fontFamily: 'Urbanist',
-                              fontSize: 16,
+                              fontSize: 17,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                   ),
-                ),
-                const SizedBox(height: 26),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Do not have an account? ',
-                      style: TextStyle(
-                        fontFamily: 'Urbanist',
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: _isLoading
-                          ? null
-                          : () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const SignupScreen(),
-                              ),
-                            ),
-                      child: const Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          fontFamily: 'Urbanist',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

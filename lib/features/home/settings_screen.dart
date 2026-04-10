@@ -1,7 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../core/constants/app_constants.dart';
+import '../auth/change_password_screen.dart';
+import '../auth/login_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  static Future<void> _signOut(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(AppConstants.keySessionId);
+
+    if (!context.mounted) {
+      return;
+    }
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +110,10 @@ class SettingsScreen extends StatelessWidget {
             _buildSettingItem(
               icon: Icons.lock_outline,
               title: 'Change Password',
-              onTap: () {},
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+              ),
             ),
             _buildSettingItem(
               icon: Icons.info_outline,
@@ -99,8 +122,8 @@ class SettingsScreen extends StatelessWidget {
             ),
             _buildSettingItem(
               icon: Icons.logout,
-              title: 'Logout',
-              onTap: () {},
+              title: 'Sign Out',
+              onTap: () => _signOut(context),
               isLogout: true,
             ),
           ],
