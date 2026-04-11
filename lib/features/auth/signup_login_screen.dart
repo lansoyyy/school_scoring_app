@@ -30,6 +30,8 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
 
+  bool get _passwordReturnedByApi => widget.initialPassword.trim().isNotEmpty;
+
   @override
   void initState() {
     super.initState();
@@ -238,7 +240,7 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
                         ),
                       ),
                   validator: (value) {
-                    if ((value ?? '').isEmpty) {
+                    if (_passwordReturnedByApi && (value ?? '').isEmpty) {
                       return 'Password is required';
                     }
                     return null;

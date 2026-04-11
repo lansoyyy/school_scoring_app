@@ -144,16 +144,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 18),
           Center(
-            child: Container(
-              width: 118,
-              height: 106,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: AppColors.textPrimary, width: 2),
-              ),
-              padding: const EdgeInsets.all(18),
-              child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
+            child: Image.asset(
+              'assets/images/logo.png',
+              fit: BoxFit.contain,
+              height: 150,
             ),
           ),
           const SizedBox(height: 56),

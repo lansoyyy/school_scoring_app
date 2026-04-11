@@ -115,9 +115,18 @@ class AuthApiService {
         payload?['new_password']?.toString() ??
         payload?['generated_password']?.toString();
 
-    // The API signals success via the "allow" field ("true"/"false" string).
-    final String allow = payload?['allow']?.toString().toLowerCase() ?? '';
-    final bool isSuccess = response.statusCode == 200 && allow == 'true';
+    final String allow =
+        payload?['allow']?.toString().trim().toLowerCase() ?? '';
+    final String normalizedStatus =
+        payload?['status']?.toString().trim().toLowerCase() ?? '';
+    final String normalizedSessionId = sessionId?.trim().toLowerCase() ?? '';
+
+    final bool hasAllowField = payload?.containsKey('allow') ?? false;
+    final bool successByPayload = hasAllowField
+        ? allow == 'true'
+        : normalizedStatus == 'success' ||
+              normalizedSessionId.startsWith('ok_');
+    final bool isSuccess = response.statusCode == 200 && successByPayload;
 
     return AuthApiResponse(
       isSuccess: isSuccess,

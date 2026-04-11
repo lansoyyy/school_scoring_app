@@ -304,26 +304,12 @@ class _HomeScreenState extends State<HomeScreen>
                   ],
                 )
               : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFCCCCCC)),
-                        borderRadius: BorderRadius.circular(6),
-                        color: Colors.white,
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'DSI',
-                          style: TextStyle(
-                            fontFamily: 'Urbanist',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF1A1A1A),
-                          ),
-                        ),
-                      ),
+                    Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.contain,
+                      height: 45,
                     ),
                     const Spacer(),
                     GestureDetector(
