@@ -36,23 +36,29 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
     super.initState();
     _emailCtrl.text = widget.initialEmail;
     _passCtrl.text = widget.initialPassword;
-    _loadSavedEmail();
+    _loadSavedCredentials();
     _showSuccessMessage();
   }
 
-  Future<void> _loadSavedEmail() async {
+  Future<void> _loadSavedCredentials() async {
     final prefs = await SharedPreferences.getInstance();
     final savedEmail =
         (prefs.getString(AppConstants.keyUserEmail) ?? '').trim().isNotEmpty
         ? (prefs.getString(AppConstants.keyUserEmail) ?? '').trim()
         : (prefs.getString(AppConstants.keySignupEmail) ?? '').trim();
+    final savedPassword = prefs.getString(AppConstants.keyUserPassword) ?? '';
 
-    if (!mounted || _emailCtrl.text.isNotEmpty || savedEmail.isEmpty) {
+    if (!mounted) {
       return;
     }
 
     setState(() {
-      _emailCtrl.text = savedEmail;
+      if (_emailCtrl.text.trim().isEmpty && savedEmail.isNotEmpty) {
+        _emailCtrl.text = savedEmail;
+      }
+      if (_passCtrl.text.isEmpty && savedPassword.isNotEmpty) {
+        _passCtrl.text = savedPassword;
+      }
     });
   }
 
@@ -110,6 +116,10 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.keyUserEmail, email);
       await prefs.setString(AppConstants.keySignupEmail, email);
+      if ((prefs.getBool(AppConstants.keyRememberMe) ?? false) &&
+          _passCtrl.text.isNotEmpty) {
+        await prefs.setString(AppConstants.keyUserPassword, _passCtrl.text);
+      }
 
       if (response.sessionId != null && response.sessionId!.isNotEmpty) {
         await prefs.setString(AppConstants.keySessionId, response.sessionId!);
@@ -150,22 +160,10 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
               children: [
                 const SizedBox(height: 12),
                 Center(
-                  child: Container(
-                    width: 132,
-                    height: 116,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: AppColors.textPrimary,
-                        width: 2,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(18),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
-                    ),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                    height: 150,
                   ),
                 ),
                 const SizedBox(height: 42),

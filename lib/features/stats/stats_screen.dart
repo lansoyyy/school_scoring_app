@@ -243,6 +243,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildHeader() {
     return Container(
+      height: 110,
       width: double.infinity,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(

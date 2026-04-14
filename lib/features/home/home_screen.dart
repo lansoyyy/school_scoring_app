@@ -251,6 +251,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildHeader() {
     return Container(
+      height: 110,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
@@ -306,11 +307,7 @@ class _HomeScreenState extends State<HomeScreen>
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
-                      height: 45,
-                    ),
+                    Image.asset('assets/images/logo.png'),
                     const Spacer(),
                     GestureDetector(
                       onTap: () {

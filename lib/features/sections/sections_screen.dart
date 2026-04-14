@@ -180,8 +180,6 @@ class _SectionsScreenState extends State<SectionsScreen> {
           Container(
             color: Colors.white,
             child: TabBar(
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
               labelStyle: const TextStyle(
                 fontFamily: 'Urbanist',
                 fontSize: 15,
@@ -222,6 +220,7 @@ class _SectionsScreenState extends State<SectionsScreen> {
 
   Widget _buildHeader() {
     return Container(
+      height: 110,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
@@ -230,7 +229,7 @@ class _SectionsScreenState extends State<SectionsScreen> {
           child: Row(
             children: [
               const Text(
-                'SECTIONS',
+                'TEAMS',
                 style: TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 22,

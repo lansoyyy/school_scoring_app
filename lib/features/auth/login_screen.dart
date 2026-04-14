@@ -28,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSavedEmail();
+    _loadSavedCredentials();
   }
 
   @override
@@ -38,22 +38,39 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _loadSavedEmail() async {
+  Future<void> _loadSavedCredentials() async {
     final prefs = await SharedPreferences.getInstance();
     final savedEmail = (prefs.getString(AppConstants.keyUserEmail) ?? '')
         .trim();
     final fallbackEmail = (prefs.getString(AppConstants.keySignupEmail) ?? '')
         .trim();
+    final savedPassword = prefs.getString(AppConstants.keyUserPassword) ?? '';
+    final shouldRemember =
+        (prefs.getBool(AppConstants.keyRememberMe) ?? false) ||
+        savedPassword.isNotEmpty;
     final emailToLoad = savedEmail.isNotEmpty ? savedEmail : fallbackEmail;
 
-    if (!mounted || emailToLoad.isEmpty) {
+    if (!mounted) {
       return;
     }
 
-    _emailCtrl.value = TextEditingValue(
-      text: emailToLoad,
-      selection: TextSelection.collapsed(offset: emailToLoad.length),
-    );
+    setState(() {
+      if (emailToLoad.isNotEmpty) {
+        _emailCtrl.value = TextEditingValue(
+          text: emailToLoad,
+          selection: TextSelection.collapsed(offset: emailToLoad.length),
+        );
+      }
+
+      if (savedPassword.isNotEmpty) {
+        _passCtrl.value = TextEditingValue(
+          text: savedPassword,
+          selection: TextSelection.collapsed(offset: savedPassword.length),
+        );
+      }
+
+      _rememberMe = shouldRemember;
+    });
   }
 
   void _trimEmail() {
@@ -106,6 +123,13 @@ class _LoginScreenState extends State<LoginScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.keyUserEmail, email);
       await prefs.setString(AppConstants.keySignupEmail, email);
+      await prefs.setBool(AppConstants.keyRememberMe, _rememberMe);
+
+      if (_rememberMe && _passCtrl.text.isNotEmpty) {
+        await prefs.setString(AppConstants.keyUserPassword, _passCtrl.text);
+      } else {
+        await prefs.remove(AppConstants.keyUserPassword);
+      }
 
       if (response.sessionId != null && response.sessionId!.isNotEmpty) {
         await prefs.setString(AppConstants.keySessionId, response.sessionId!);
@@ -150,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 52),
                 const Text(
-                  'Welcome back!',
+                  'Sign In',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 26,
@@ -160,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'Sign in to your account',
+                  'Fill in your details to get started',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 14,
@@ -307,7 +331,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           )
                         : const Text(
-                            'Sign In',
+                            'Submit',
                             style: TextStyle(
                               fontFamily: 'Urbanist',
                               fontSize: 16,

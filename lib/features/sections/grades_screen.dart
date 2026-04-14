@@ -198,7 +198,7 @@ class _GradesScreenState extends State<GradesScreen> {
                                 fontFamily: 'Urbanist',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: _gradeColor(grade),
+                                color: Colors.black,
                               ),
                             ),
                           ],
@@ -232,7 +232,7 @@ class _GradesScreenState extends State<GradesScreen> {
               const SizedBox(width: 4),
               const Expanded(
                 child: Text(
-                  'GRADES',
+                  'PERFORMANCE',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 22, // Updated font size
@@ -390,45 +390,11 @@ class _GradesScreenState extends State<GradesScreen> {
                   style: TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 12,
-                    color: _gradeColor(_gwa.round()),
+                    color: Colors.grey,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
-            ),
-          ),
-          // GWA
-          Row(
-            children: [
-              const Text(
-                'GWA',
-                style: TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 13,
-                  color: Color(0xFF888888),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                _gwa.toStringAsFixed(2),
-                style: const TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A1A),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 16),
-          // Rank
-          Text(
-            'Rank #${widget.student['rank']}',
-            style: const TextStyle(
-              fontFamily: 'Urbanist',
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1A1A),
             ),
           ),
         ],

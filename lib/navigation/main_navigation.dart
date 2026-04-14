@@ -89,7 +89,7 @@ class _MainNavigationState extends State<MainNavigation> {
                     _NavItem(
                       icon: Icons.people_outline,
                       activeIcon: Icons.people,
-                      label: 'Sections',
+                      label: 'Teams',
                       isActive: _currentIndex == 3,
                       onTap: () => _onNavTap(3),
                     ),

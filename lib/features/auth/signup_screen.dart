@@ -128,24 +128,14 @@ class _SignupScreenState extends State<SignupScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(22, 12, 22, 32),
+          padding: const EdgeInsets.fromLTRB(24, 14, 24, 32),
           child: Form(
             key: _formKey,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  onPressed: _isLoading ? null : () => Navigator.pop(context),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: AppColors.textPrimary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 6),
                 Center(
                   child: Image.asset(
                     'assets/images/logo.png',
@@ -153,7 +143,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     height: 150,
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 52),
                 const Text(
                   'Sign Up',
                   style: TextStyle(
@@ -290,7 +280,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 24),
                 Center(
-                  child: GestureDetector(
+                  child: InkWell(
                     onTap: _isLoading
                         ? null
                         : () => Navigator.pushReplacement(
@@ -299,12 +289,24 @@ class _SignupScreenState extends State<SignupScreen> {
                               builder: (_) => const LoginScreen(),
                             ),
                           ),
-                    child: const Text(
-                      'Already have an account? Sign In',
-                      style: TextStyle(
-                        fontFamily: 'Urbanist',
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
+                    child: const Text.rich(
+                      TextSpan(
+                        text: 'Already have an account? ',
+                        style: TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        children: <InlineSpan>[
+                          TextSpan(
+                            text: 'Sign In',
+                            style: TextStyle(
+                              fontFamily: 'Urbanist',
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

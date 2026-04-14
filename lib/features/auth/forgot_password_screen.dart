@@ -86,6 +86,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.keyUserEmail, email);
       await prefs.setString(AppConstants.keySignupEmail, email);
+      if ((prefs.getBool(AppConstants.keyRememberMe) ?? false) &&
+          (response.generatedPassword ?? '').isNotEmpty) {
+        await prefs.setString(
+          AppConstants.keyUserPassword,
+          response.generatedPassword!,
+        );
+      }
 
       if (!mounted) {
         return;

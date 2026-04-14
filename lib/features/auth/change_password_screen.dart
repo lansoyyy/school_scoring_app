@@ -121,6 +121,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.keyUserEmail, email);
       await prefs.setString(AppConstants.keySignupEmail, email);
+      if ((prefs.getBool(AppConstants.keyRememberMe) ?? false) &&
+          _newPasswordCtrl.text.isNotEmpty) {
+        await prefs.setString(
+          AppConstants.keyUserPassword,
+          _newPasswordCtrl.text,
+        );
+      }
 
       _currentPasswordCtrl.clear();
       _newPasswordCtrl.clear();
@@ -160,37 +167,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  onPressed: _isLoading ? null : () => Navigator.pop(context),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: AppColors.textPrimary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 18),
                 Center(
-                  child: Container(
-                    width: 118,
-                    height: 106,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: AppColors.textPrimary,
-                        width: 2,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(18),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
-                    ),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                    height: 150,
                   ),
                 ),
-                const SizedBox(height: 56),
+                const SizedBox(height: 52),
                 const Text(
                   'Change Password',
                   style: TextStyle(
@@ -200,7 +184,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 2),
+                const Text(
+                  'Fill in your details to get started',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
                 _buildLabel('Email Address'),
                 const SizedBox(height: 8),
                 TextFormField(

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import 'login_screen.dart';
+import 'signup_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,10 +26,25 @@ class _SplashScreenState extends State<SplashScreen> {
       return;
     }
 
+    final prefs = await SharedPreferences.getInstance();
+    final savedUserEmail = (prefs.getString(AppConstants.keyUserEmail) ?? '')
+        .trim();
+    final savedSignupEmail =
+        (prefs.getString(AppConstants.keySignupEmail) ?? '').trim();
+    final hasSavedEmail =
+        savedUserEmail.isNotEmpty || savedSignupEmail.isNotEmpty;
+    final Widget nextScreen = hasSavedEmail
+        ? const LoginScreen()
+        : const SignupScreen();
+
+    if (!mounted) {
+      return;
+    }
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const LoginScreen(),
+        pageBuilder: (_, __, ___) => nextScreen,
         transitionsBuilder: (_, a, __, child) =>
             FadeTransition(opacity: a, child: child),
         transitionDuration: const Duration(milliseconds: 500),

@@ -211,6 +211,7 @@ class _LiveScreenState extends State<LiveScreen> {
 
   Widget _buildHeader() {
     return Container(
+      height: 110,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
