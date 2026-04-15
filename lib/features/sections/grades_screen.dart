@@ -1,20 +1,73 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:school_scoring_app/core/constants/app_constants.dart';
 
-class GradeItem {
-  final String subject;
-  final int grade;
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 
-  GradeItem({required this.subject, required this.grade});
+class PerformanceSubject {
+  const PerformanceSubject({required this.name, required this.grade});
+
+  final String name;
+  final double grade;
+}
+
+class StudentPerformanceInfo {
+  const StudentPerformanceInfo({
+    required this.firstName,
+    required this.lastName,
+    required this.section,
+    required this.picture,
+  });
+
+  final String firstName;
+  final String lastName;
+  final String section;
+  final String picture;
+
+  String get fullName {
+    final parts = <String>[
+      firstName.trim(),
+      lastName.trim(),
+    ].where((part) => part.isNotEmpty).toList();
+    return parts.join(' ');
+  }
+}
+
+class QuarterPerformance {
+  const QuarterPerformance({
+    required this.name,
+    required this.subjects,
+    required this.rating,
+    required this.quarterTime,
+    required this.sectionImage,
+  });
+
+  final String name;
+  final List<PerformanceSubject> subjects;
+  final String rating;
+  final String quarterTime;
+  final String sectionImage;
+
+  double get gwa {
+    if (subjects.isEmpty) {
+      return 0;
+    }
+
+    final total = subjects.fold<double>(
+      0,
+      (sum, subject) => sum + subject.grade,
+    );
+    return total / subjects.length;
+  }
 }
 
 class GradesScreen extends StatefulWidget {
+  const GradesScreen({super.key, required this.student, required this.section});
+
   final Map<String, dynamic> student;
   final Map<String, dynamic> section;
-
-  const GradesScreen({super.key, required this.student, required this.section});
 
   @override
   State<GradesScreen> createState() => _GradesScreenState();
@@ -22,62 +75,17 @@ class GradesScreen extends StatefulWidget {
 
 class _GradesScreenState extends State<GradesScreen> {
   int _selectedQuarter = 0;
-
-  final List<String> _quarterLabels = [
-    'Q1',
-    'Q2',
-    'Q3',
-    'Q4',
-    'Q1',
-    'Q2',
-    'Q3',
-    'Q4L1',
-    'Q1L2',
-    'Q2L2',
-    'Q3L2',
-    'Q4L2',
-  ];
-
-  static const List<Map<String, dynamic>> _subjects = [
-    {
-      'name': 'Mathematics',
-      'icon': Icons.calculate_outlined,
-      'color': 0xFF4A90E2,
-    },
-    {'name': 'Science', 'icon': Icons.science_outlined, 'color': 0xFF50C878},
-    {'name': 'English', 'icon': Icons.menu_book_outlined, 'color': 0xFFFF6B35},
-    {'name': 'Filipino', 'icon': Icons.translate_outlined, 'color': 0xFFEF4444},
-    {
-      'name': 'Araling Panlipunan',
-      'icon': Icons.public_outlined,
-      'color': 0xFF7C3AED,
-    },
-    {'name': 'MAPEH', 'icon': Icons.sports_outlined, 'color': 0xFF00A896},
-    {
-      'name': 'Values Education',
-      'icon': Icons.favorite_outline,
-      'color': 0xFFEC4899,
-    },
-    {
-      'name': 'Technology & Livelihood',
-      'icon': Icons.handyman_outlined,
-      'color': 0xFFF5A623,
-    },
-  ];
-
-  Map<String, Map<String, int>> _gradesData = {};
+  List<QuarterPerformance> _quarters = const <QuarterPerformance>[];
+  StudentPerformanceInfo? _studentInfo;
   bool _isLoadingGrades = true;
+  String? _errorMessage;
 
-  List<int> get _currentGrades {
-    final quarterKey = _quarterLabels[_selectedQuarter];
-    final quarterGrades = _gradesData[quarterKey];
-    if (quarterGrades == null) {
-      return List.generate(_subjects.length, (index) => 0);
+  QuarterPerformance? get _selectedPerformance {
+    if (_quarters.isEmpty || _selectedQuarter >= _quarters.length) {
+      return null;
     }
-    return _subjects.map((subject) {
-      final subjectName = subject['name'] as String;
-      return quarterGrades![subjectName] ?? 0;
-    }).toList();
+
+    return _quarters[_selectedQuarter];
   }
 
   @override
@@ -87,71 +95,242 @@ class _GradesScreenState extends State<GradesScreen> {
   }
 
   Future<void> _fetchGrades() async {
+    final studentId = widget.student['id']?.toString().trim() ?? '';
+    if (studentId.isEmpty) {
+      setState(() {
+        _isLoadingGrades = false;
+        _errorMessage = 'Student information is missing.';
+      });
+      return;
+    }
+
     try {
-      final studentId = widget.student['id'];
       final response = await http
-          .get(Uri.parse('${AppConstants.apiBaseUrl}/grade?id=$studentId'))
+          .get(
+            Uri.parse('${AppConstants.apiBaseUrl}/grade').replace(
+              queryParameters: <String, String>{'studentId': studentId},
+            ),
+          )
           .timeout(
             const Duration(milliseconds: AppConstants.connectionTimeout),
           );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        Map<String, Map<String, int>> parsedData = {};
-
-        for (var item in data) {
-          if (item is Map) {
-            final quarter = item['quarter'] as String;
-            final grades = <String, int>{};
-
-            // Map subject names to API field names
-            final subjectMapping = {
-              'Mathematics': 'mathematics',
-              'Science': 'science',
-              'English': 'english',
-              'Filipino': 'filipino',
-              'Araling Panlipunan': 'religion',
-              'MAPEH': 'pe',
-              'Values Education': 'religion',
-              'Technology & Livelihood': 'religion',
-            };
-
-            for (var subject in _subjects) {
-              final subjectName = subject['name'] as String;
-              final apiField = subjectMapping[subjectName];
-              if (apiField != null && item[apiField] != null) {
-                grades[subjectName] = double.parse(
-                  item[apiField].toString(),
-                ).toInt();
-              }
-            }
-
-            parsedData[quarter] = grades;
-          }
-        }
-
+      if (response.statusCode != 200) {
         setState(() {
-          _gradesData = parsedData;
           _isLoadingGrades = false;
+          _errorMessage = 'Unable to load performance details.';
         });
-      } else {
-        setState(() => _isLoadingGrades = false);
+        return;
       }
-    } catch (e) {
-      setState(() => _isLoadingGrades = false);
+
+      final decoded = json.decode(response.body);
+      final payload = decoded is Map<String, dynamic>
+          ? decoded
+          : Map<String, dynamic>.from(decoded as Map);
+      final quarters = _parseQuarters(payload['student_quarters']);
+
+      setState(() {
+        _studentInfo = _parseStudentInfo(payload['student_info']);
+        _quarters = quarters;
+        _selectedQuarter = 0;
+        _isLoadingGrades = false;
+        _errorMessage = quarters.isEmpty
+            ? 'No performance data available.'
+            : null;
+      });
+    } catch (_) {
+      setState(() {
+        _isLoadingGrades = false;
+        _errorMessage = 'Unable to load performance details.';
+      });
     }
   }
 
-  Color _gradeColor(int grade) {
-    if (grade >= 90) return const Color(0xFF10B981);
-    if (grade >= 85) return const Color(0xFF4A90E2);
-    if (grade >= 80) return const Color(0xFFF59E0B);
-    if (grade >= 75) return const Color(0xFFFF6B35);
+  StudentPerformanceInfo? _parseStudentInfo(dynamic rawStudentInfo) {
+    if (rawStudentInfo is! List || rawStudentInfo.isEmpty) {
+      return null;
+    }
+
+    final firstItem = rawStudentInfo.first;
+    if (firstItem is! Map) {
+      return null;
+    }
+
+    final student = Map<String, dynamic>.from(firstItem);
+    return StudentPerformanceInfo(
+      firstName: _formatPersonName(student['first_name']?.toString() ?? ''),
+      lastName: _formatPersonName(student['last_name']?.toString() ?? ''),
+      section: student['section']?.toString().trim() ?? '',
+      picture: student['picture']?.toString().trim() ?? '',
+    );
+  }
+
+  List<QuarterPerformance> _parseQuarters(dynamic rawQuarters) {
+    if (rawQuarters is! List) {
+      return const <QuarterPerformance>[];
+    }
+
+    final quarters = <QuarterPerformance>[];
+    for (final quarterEntry in rawQuarters) {
+      if (quarterEntry is! Map) {
+        continue;
+      }
+
+      final quarterMap = Map<String, dynamic>.from(quarterEntry);
+      final quarterName = quarterMap['name']?.toString().trim() ?? '';
+      if (quarterName.isEmpty) {
+        continue;
+      }
+
+      final subjectIndexes =
+          quarterMap.keys
+              .map((key) => RegExp(r'^subject_(\d+)$').firstMatch(key))
+              .whereType<RegExpMatch>()
+              .map((match) => int.tryParse(match.group(1) ?? ''))
+              .whereType<int>()
+              .toList()
+            ..sort();
+
+      final subjects = <PerformanceSubject>[];
+      for (final index in subjectIndexes) {
+        final rawSubject =
+            quarterMap['subject_$index']?.toString().trim() ?? '';
+        if (rawSubject.isEmpty) {
+          continue;
+        }
+
+        subjects.add(
+          PerformanceSubject(
+            name: _formatSubjectName(rawSubject),
+            grade: _parseGradeValue(quarterMap['grade_$index']),
+          ),
+        );
+      }
+
+      quarters.add(
+        QuarterPerformance(
+          name: quarterName,
+          subjects: subjects,
+          rating: quarterMap['rating']?.toString().trim() ?? '',
+          quarterTime: _formatQuarterTime(
+            quarterMap['quarter_time']?.toString() ?? '',
+          ),
+          sectionImage: quarterMap['section_img']?.toString().trim() ?? '',
+        ),
+      );
+    }
+
+    return quarters;
+  }
+
+  double _parseGradeValue(dynamic rawValue) {
+    if (rawValue == null) {
+      return 0;
+    }
+
+    return double.tryParse(rawValue.toString().trim()) ?? 0;
+  }
+
+  String _formatPersonName(String rawValue) {
+    final trimmed = rawValue.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+
+    return trimmed.split(RegExp(r'\s+')).map(_capitalizeWord).join(' ');
+  }
+
+  String _formatSubjectName(String rawValue) {
+    final trimmed = rawValue.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+
+    return trimmed
+        .split(RegExp(r'\s+'))
+        .map((word) {
+          final normalized = word.trim();
+          if (normalized.isEmpty) {
+            return normalized;
+          }
+
+          if (normalized.length <= 3) {
+            return normalized.toUpperCase();
+          }
+
+          return _capitalizeWord(normalized);
+        })
+        .join(' ');
+  }
+
+  String _formatQuarterTime(String rawValue) {
+    final trimmed = rawValue.trim();
+    if (trimmed.isEmpty) {
+      return 'No period available';
+    }
+
+    final parts = trimmed.split('-');
+    if (parts.length != 2) {
+      return _formatPersonName(trimmed);
+    }
+
+    return '${_capitalizeWord(parts[0].trim())} - ${_capitalizeWord(parts[1].trim())}';
+  }
+
+  String _capitalizeWord(String value) {
+    if (value.isEmpty) {
+      return value;
+    }
+
+    return value[0].toUpperCase() + value.substring(1).toLowerCase();
+  }
+
+  String _buildInitials(String value) {
+    final parts = value
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) {
+      return 'NA';
+    }
+    if (parts.length == 1) {
+      return parts.first.substring(0, 1).toUpperCase();
+    }
+
+    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+        .toUpperCase();
+  }
+
+  String _formatGrade(double grade) {
+    if (grade == grade.roundToDouble()) {
+      return grade.toInt().toString();
+    }
+
+    return grade.toStringAsFixed(1);
+  }
+
+  Color _gradeColor(double grade) {
+    if (grade >= 90) {
+      return const Color(0xFF10B981);
+    }
+    if (grade >= 85) {
+      return const Color(0xFF4A90E2);
+    }
+    if (grade >= 80) {
+      return const Color(0xFFF59E0B);
+    }
+    if (grade >= 75) {
+      return const Color(0xFFFF6B35);
+    }
     return const Color(0xFFEF4444);
   }
 
   @override
   Widget build(BuildContext context) {
+    final selectedPerformance = _selectedPerformance;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -159,21 +338,25 @@ class _GradesScreenState extends State<GradesScreen> {
           _buildHeader(context),
           _buildStudentInfo(),
           _buildQuarterTabs(),
-          _buildGWARow(),
+          _buildSummaryCard(selectedPerformance),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
             child: _isLoadingGrades
                 ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   )
+                : _errorMessage != null
+                ? _buildStateMessage(_errorMessage!)
+                : selectedPerformance == null ||
+                      selectedPerformance.subjects.isEmpty
+                ? _buildStateMessage('No subject grades available.')
                 : ListView.separated(
                     padding: EdgeInsets.zero,
-                    itemCount: _subjects.length,
+                    itemCount: selectedPerformance.subjects.length,
                     separatorBuilder: (_, __) =>
                         const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                    itemBuilder: (context, i) {
-                      final subject = _subjects[i];
-                      final grade = _currentGrades[i];
+                    itemBuilder: (context, index) {
+                      final subject = selectedPerformance.subjects[index];
                       return Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -183,7 +366,7 @@ class _GradesScreenState extends State<GradesScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                subject['name'],
+                                subject.name,
                                 style: const TextStyle(
                                   fontFamily: 'Urbanist',
                                   fontSize: 15,
@@ -193,12 +376,12 @@ class _GradesScreenState extends State<GradesScreen> {
                               ),
                             ),
                             Text(
-                              '$grade',
+                              _formatGrade(subject.grade),
                               style: TextStyle(
                                 fontFamily: 'Urbanist',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.black,
+                                color: _gradeColor(subject.grade),
                               ),
                             ),
                           ],
@@ -235,7 +418,7 @@ class _GradesScreenState extends State<GradesScreen> {
                   'PERFORMANCE',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
-                    fontSize: 22, // Updated font size
+                    fontSize: 22,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF1A1A1A),
                   ),
@@ -249,9 +432,19 @@ class _GradesScreenState extends State<GradesScreen> {
   }
 
   Widget _buildStudentInfo() {
-    final initials =
-        widget.student['name'].toString().split(' ').first[0] +
-        widget.student['name'].toString().split(' ').last[0];
+    final studentName = _studentInfo?.fullName.trim().isNotEmpty == true
+        ? _studentInfo!.fullName.trim()
+        : (widget.student['name']?.toString().trim().isNotEmpty ?? false)
+        ? widget.student['name'].toString().trim()
+        : 'Student';
+    final sectionName = _studentInfo?.section.trim().isNotEmpty == true
+        ? _studentInfo!.section.trim()
+        : widget.section['name']?.toString().trim() ?? '';
+    final imageUrl = _studentInfo?.picture.trim().isNotEmpty == true
+        ? _studentInfo!.picture.trim()
+        : widget.student['slink']?.toString().trim() ?? '';
+    final initials = _buildInitials(studentName);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
@@ -263,16 +456,38 @@ class _GradesScreenState extends State<GradesScreen> {
               color: Color(0xFFE8E8E8),
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: Text(
-                initials,
-                style: const TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF555555),
-                ),
-              ),
+            child: ClipOval(
+              child: imageUrl.isEmpty
+                  ? Center(
+                      child: Text(
+                        initials,
+                        style: const TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF555555),
+                        ),
+                      ),
+                    )
+                  : Image.network(
+                      imageUrl,
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Text(
+                            initials,
+                            style: const TextStyle(
+                              fontFamily: 'Urbanist',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF555555),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ),
           const SizedBox(width: 14),
@@ -281,7 +496,7 @@ class _GradesScreenState extends State<GradesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.student['name'],
+                  studentName,
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 16,
@@ -291,7 +506,7 @@ class _GradesScreenState extends State<GradesScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${widget.student['id']} · ${widget.section['name']}',
+                  sectionName,
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 12,
@@ -307,13 +522,17 @@ class _GradesScreenState extends State<GradesScreen> {
   }
 
   Widget _buildQuarterTabs() {
+    if (_quarters.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       color: Colors.white,
       height: 50,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        itemCount: _quarterLabels.length,
+        itemCount: _quarters.length,
         itemBuilder: (context, index) {
           final isActive = _selectedQuarter == index;
           return GestureDetector(
@@ -331,7 +550,7 @@ class _GradesScreenState extends State<GradesScreen> {
                 ),
               ),
               child: Text(
-                _quarterLabels[index],
+                _quarters[index].name,
                 style: TextStyle(
                   fontFamily: 'Urbanist',
                   fontSize: 14,
@@ -348,35 +567,45 @@ class _GradesScreenState extends State<GradesScreen> {
     );
   }
 
-  double get _gwa {
-    final grades = _currentGrades;
-    return grades.reduce((a, b) => a + b) / grades.length;
-  }
+  Widget _buildSummaryCard(QuarterPerformance? performance) {
+    if (performance == null) {
+      return const SizedBox.shrink();
+    }
 
-  Widget _buildGWARow() {
     return Container(
       color: const Color(0xFFF5F5F5),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Link Image
           Container(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             decoration: const BoxDecoration(
               color: Color(0xFFE8E8E8),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.link, size: 20, color: Color(0xFF888888)),
+            child: ClipOval(
+              child: performance.sectionImage.isEmpty
+                  ? const Icon(Icons.image_outlined, color: Color(0xFF888888))
+                  : Image.network(
+                      performance.sectionImage,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.image_outlined,
+                          color: Color(0xFF888888),
+                        );
+                      },
+                    ),
+            ),
           ),
           const SizedBox(width: 12),
-          // Period and Remarks
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'June - August',
+                  performance.quarterTime,
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 13,
@@ -386,18 +615,62 @@ class _GradesScreenState extends State<GradesScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Good',
+                  performance.rating.isEmpty
+                      ? 'No rating available'
+                      : performance.rating,
                   style: TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 12,
-                    color: Colors.grey,
+                    color: performance.rating.isEmpty
+                        ? const Color(0xFF888888)
+                        : const Color(0xFF10B981),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const Text(
+                'GWA',
+                style: TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 12,
+                  color: Color(0xFF888888),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                performance.gwa.toStringAsFixed(2),
+                style: const TextStyle(
+                  fontFamily: 'Urbanist',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStateMessage(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'Urbanist',
+            fontSize: 15,
+            color: Color(0xFF6B7280),
+          ),
+        ),
       ),
     );
   }

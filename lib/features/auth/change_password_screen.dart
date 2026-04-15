@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:school_scoring_app/features/auth/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -370,6 +371,39 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Center(
+                  child: InkWell(
+                    onTap: _isLoading
+                        ? null
+                        : () => Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                          ),
+                    child: const Text.rich(
+                      TextSpan(
+                        text: 'Change your mind? ',
+                        style: TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        children: <InlineSpan>[
+                          TextSpan(
+                            text: 'Home',
+                            style: TextStyle(
+                              fontFamily: 'Urbanist',
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
