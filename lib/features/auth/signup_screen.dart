@@ -96,6 +96,13 @@ class _SignupScreenState extends State<SignupScreen> {
     if (response.isSuccess) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.keySignupEmail, email);
+      await prefs.setString(AppConstants.keyUserEmail, email);
+      if ((response.generatedPassword ?? '').isNotEmpty) {
+        await prefs.setString(
+          AppConstants.keyUserPassword,
+          response.generatedPassword!,
+        );
+      }
 
       if (!mounted) {
         return;
