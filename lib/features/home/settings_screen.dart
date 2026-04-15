@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
 import '../auth/change_password_screen.dart';
 import '../auth/login_screen.dart';
+import '../legal/privacy_policy_screen.dart';
+import '../legal/terms_and_conditions_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -44,7 +46,7 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -113,6 +115,24 @@ class SettingsScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+              ),
+            ),
+            _buildSettingItem(
+              icon: Icons.description_outlined,
+              title: 'Terms & Conditions',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const TermsAndConditionsScreen(),
+                ),
+              ),
+            ),
+            _buildSettingItem(
+              icon: Icons.privacy_tip_outlined,
+              title: 'Privacy Policy',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
               ),
             ),
             _buildSettingItem(

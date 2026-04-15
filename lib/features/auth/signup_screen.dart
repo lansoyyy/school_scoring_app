@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../legal/privacy_policy_screen.dart';
+import '../legal/terms_and_conditions_screen.dart';
 import 'login_screen.dart';
 import 'services/auth_api_service.dart';
 import 'signup_login_screen.dart';
@@ -29,6 +31,20 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   bool get _canSubmit => _agreeTerms && !_isLoading;
+
+  void _openTermsAndConditions() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen()),
+    );
+  }
+
+  void _openPrivacyPolicy() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+    );
+  }
 
   void _trimEmail() {
     final trimmedEmail = _emailCtrl.text.trim();
@@ -217,35 +233,62 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text.rich(
-                        TextSpan(
-                          text: 'I agree to the ',
-                          style: const TextStyle(
-                            fontFamily: 'Urbanist',
-                            fontSize: 15,
-                            color: AppColors.textSecondary,
-                            height: 1.45,
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          const Text(
+                            'I agree to the ',
+                            style: TextStyle(
+                              fontFamily: 'Urbanist',
+                              fontSize: 15,
+                              color: AppColors.textSecondary,
+                              height: 1.45,
+                            ),
                           ),
-                          children: const <InlineSpan>[
-                            TextSpan(
-                              text: 'Terms & Conditions',
-                              style: TextStyle(
-                                fontFamily: 'Urbanist',
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                          InkWell(
+                            onTap: _isLoading ? null : _openTermsAndConditions,
+                            borderRadius: BorderRadius.circular(6),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 2),
+                              child: Text(
+                                'Terms & Conditions',
+                                style: TextStyle(
+                                  fontFamily: 'Urbanist',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                  height: 1.45,
+                                ),
                               ),
                             ),
-                            TextSpan(text: ' and '),
-                            TextSpan(
-                              text: 'Privacy Policy',
-                              style: TextStyle(
-                                fontFamily: 'Urbanist',
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                          ),
+                          const Text(
+                            ' and ',
+                            style: TextStyle(
+                              fontFamily: 'Urbanist',
+                              fontSize: 15,
+                              color: AppColors.textSecondary,
+                              height: 1.45,
+                            ),
+                          ),
+                          InkWell(
+                            onTap: _isLoading ? null : _openPrivacyPolicy,
+                            borderRadius: BorderRadius.circular(6),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 2),
+                              child: Text(
+                                'Privacy Policy',
+                                style: TextStyle(
+                                  fontFamily: 'Urbanist',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                  height: 1.45,
+                                ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
