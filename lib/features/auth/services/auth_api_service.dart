@@ -8,6 +8,7 @@ class AuthApiResponse {
   final bool isSuccess;
   final String message;
   final String? sessionId;
+  final String? userId;
   final String? status;
   final String? generatedPassword;
   final int statusCode;
@@ -18,6 +19,7 @@ class AuthApiResponse {
     required this.message,
     required this.statusCode,
     this.sessionId,
+    this.userId,
     this.status,
     this.generatedPassword,
     this.rawData,
@@ -97,6 +99,7 @@ class AuthApiService {
     Map<String, dynamic>? payload;
     String message = 'Request failed. Please try again.';
     String? sessionId;
+    String? userId;
     String? status;
     String? generatedPassword;
 
@@ -109,6 +112,7 @@ class AuthApiService {
 
     message = payload?['message']?.toString() ?? message;
     sessionId = payload?['session_id']?.toString();
+    userId = payload?['uid']?.toString();
     status = payload?['status']?.toString();
     generatedPassword =
         payload?['password']?.toString() ??
@@ -132,6 +136,7 @@ class AuthApiService {
       isSuccess: isSuccess,
       message: message,
       sessionId: sessionId,
+      userId: userId,
       status: status,
       generatedPassword: generatedPassword,
       statusCode: response.statusCode,

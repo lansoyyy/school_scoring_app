@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/services/local_profile_service.dart';
 import '../../navigation/main_navigation.dart';
 import 'services/auth_api_service.dart';
 
@@ -25,6 +26,7 @@ class ForgotPasswordLoginScreen extends StatefulWidget {
 
 class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
   final AuthApiService _authApi = const AuthApiService();
+  final LocalProfileService _profileService = const LocalProfileService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _passCtrl = TextEditingController();
@@ -114,8 +116,10 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
 
     if (response.isSuccess) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(AppConstants.keyUserEmail, email);
-      await prefs.setString(AppConstants.keySignupEmail, email);
+      await _profileService.saveAuthIdentity(
+        email: email,
+        userId: response.userId,
+      );
       if ((prefs.getBool(AppConstants.keyRememberMe) ?? false) &&
           _passCtrl.text.isNotEmpty) {
         await prefs.setString(AppConstants.keyUserPassword, _passCtrl.text);

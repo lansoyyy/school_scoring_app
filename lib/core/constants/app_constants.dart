@@ -50,8 +50,10 @@ class AppConstants {
   static const String keyUserId = 'user_id';
   static const String keyUserName = 'user_name';
   static const String keyUserEmail = 'user_email';
+  static const String keyUserProfileImage = 'user_profile_image';
   static const String keyUserPassword = 'user_password';
   static const String keyRememberMe = 'remember_me';
+  static const String keyAllowNotifications = 'allow_notifications';
   static const String keyThemeMode = 'theme_mode';
   static const String keyLanguage = 'language';
 

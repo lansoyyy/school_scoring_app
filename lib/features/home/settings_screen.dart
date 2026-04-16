@@ -2,13 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/services/local_profile_service.dart';
+import 'about_screen.dart';
 import '../auth/change_password_screen.dart';
 import '../auth/login_screen.dart';
+import 'edit_profile_screen.dart';
+import 'notifications_screen.dart';
 import '../legal/privacy_policy_screen.dart';
 import '../legal/terms_and_conditions_screen.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final LocalProfileService _profileService = const LocalProfileService();
+  LocalProfileData _profile = const LocalProfileData(
+    userId: '',
+    name: '',
+    email: '',
+    imageBase64: '',
+  );
+  bool _isLoadingProfile = true;
 
   static Future<void> _signOut(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
@@ -26,7 +44,40 @@ class SettingsScreen extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final profile = await _profileService.loadProfile();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _profile = profile;
+      _isLoadingProfile = false;
+    });
+  }
+
+  Future<void> _openEditProfile({bool pickImageOnOpen = false}) async {
+    final didUpdate = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditProfileScreen(pickImageOnOpen: pickImageOnOpen),
+      ),
+    );
+
+    if (didUpdate == true) {
+      await _loadProfile();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final profileImageBytes = _profile.imageBytes;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -60,25 +111,49 @@ class SettingsScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFE8E8E8),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Color(0xFF888888),
+                  InkWell(
+                    onTap: () => _openEditProfile(),
+                    borderRadius: BorderRadius.circular(40),
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE8E8E8),
+                        shape: BoxShape.circle,
+                      ),
+                      child: ClipOval(
+                        child: _isLoadingProfile
+                            ? const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                    color: Color(0xFF888888),
+                                  ),
+                                ),
+                              )
+                            : profileImageBytes == null
+                            ? const Center(
+                                child: Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Color(0xFF888888),
+                                ),
+                              )
+                            : Image.memory(
+                                profileImageBytes,
+                                fit: BoxFit.cover,
+                              ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'John Doe',
-                    style: TextStyle(
+                  Text(
+                    _isLoadingProfile
+                        ? 'Loading profile...'
+                        : _profile.displayName,
+                    style: const TextStyle(
                       fontFamily: 'Urbanist',
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -86,13 +161,32 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Student ID: 2024-0001',
-                    style: TextStyle(
+                  Text(
+                    _profile.userId.isEmpty
+                        ? 'Student ID: Not available'
+                        : 'Student ID: ${_profile.userId}',
+                    style: const TextStyle(
                       fontFamily: 'Urbanist',
                       fontSize: 14,
                       color: Color(0xFF888888),
                     ),
+                  ),
+                  if (_profile.email.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _profile.email,
+                      style: const TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontSize: 13,
+                        color: Color(0xFF888888),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: () => _openEditProfile(pickImageOnOpen: true),
+                    icon: const Icon(Icons.photo_camera_back_outlined),
+                    label: const Text('Update Picture'),
                   ),
                 ],
               ),
@@ -102,12 +196,20 @@ class SettingsScreen extends StatelessWidget {
             _buildSettingItem(
               icon: Icons.person_outline,
               title: 'Edit Profile',
-              onTap: () {},
+              onTap: () => _openEditProfile(),
+            ),
+            _buildSettingItem(
+              icon: Icons.photo_camera_back_outlined,
+              title: 'Update Picture',
+              onTap: () => _openEditProfile(pickImageOnOpen: true),
             ),
             _buildSettingItem(
               icon: Icons.notifications_outlined,
               title: 'Notifications',
-              onTap: () {},
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              ),
             ),
             _buildSettingItem(
               icon: Icons.lock_outline,
@@ -138,7 +240,10 @@ class SettingsScreen extends StatelessWidget {
             _buildSettingItem(
               icon: Icons.info_outline,
               title: 'About',
-              onTap: () {},
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AboutScreen()),
+              ),
             ),
             _buildSettingItem(
               icon: Icons.logout,
