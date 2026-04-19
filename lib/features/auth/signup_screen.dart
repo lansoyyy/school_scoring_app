@@ -178,7 +178,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Fill in your details to get started',
+                  'Fill in your details to get started.',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 14,

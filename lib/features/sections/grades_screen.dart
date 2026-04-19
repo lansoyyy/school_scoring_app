@@ -258,7 +258,7 @@ class _GradesScreenState extends State<GradesScreen> {
             return normalized.toUpperCase();
           }
 
-          return _capitalizeWord(normalized);
+          return normalized;
         })
         .join(' ');
   }
@@ -311,21 +311,7 @@ class _GradesScreenState extends State<GradesScreen> {
     return grade.toStringAsFixed(1);
   }
 
-  Color _gradeColor(double grade) {
-    if (grade >= 90) {
-      return const Color(0xFF10B981);
-    }
-    if (grade >= 85) {
-      return const Color(0xFF4A90E2);
-    }
-    if (grade >= 80) {
-      return const Color(0xFFF59E0B);
-    }
-    if (grade >= 75) {
-      return const Color(0xFFFF6B35);
-    }
-    return const Color(0xFFEF4444);
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -381,7 +367,7 @@ class _GradesScreenState extends State<GradesScreen> {
                                 fontFamily: 'Urbanist',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: _gradeColor(subject.grade),
+                                color:Colors.black,
                               ),
                             ),
                           ],
@@ -621,38 +607,14 @@ class _GradesScreenState extends State<GradesScreen> {
                   style: TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 12,
-                    color: performance.rating.isEmpty
-                        ? const Color(0xFF888888)
-                        : const Color(0xFF10B981),
+                    color: Colors.black,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text(
-                'GWA',
-                style: TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 12,
-                  color: Color(0xFF888888),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                performance.gwa.toStringAsFixed(2),
-                style: const TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A1A),
-                ),
-              ),
-            ],
-          ),
+        
         ],
       ),
     );

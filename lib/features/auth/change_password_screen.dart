@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:school_scoring_app/features/auth/login_screen.dart';
+import 'package:school_scoring_app/features/home/home_screen.dart';
+import 'package:school_scoring_app/navigation/main_navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -158,6 +160,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+        ),
+      
+      ),
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -172,7 +183,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   child: Image.asset(
                     'assets/images/logo.png',
                     fit: BoxFit.contain,
-                    height: 150,
+                    height: 120,
                   ),
                 ),
                 const SizedBox(height: 52),
@@ -187,7 +198,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 ),
                 const SizedBox(height: 2),
                 const Text(
-                  'Fill in your details to get started',
+                  'Fill in your details to get started.',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 14,
@@ -381,7 +392,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         : () => Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const LoginScreen(),
+                              builder: (_) => const MainNavigation(),
                             ),
                           ),
                     child: const Text.rich(

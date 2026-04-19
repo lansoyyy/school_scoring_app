@@ -188,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'Fill in your details to get started',
+                  'Fill in your details to get started.',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 14,

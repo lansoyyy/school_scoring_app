@@ -120,15 +120,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
         ),
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(
-            fontFamily: 'Urbanist',
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
-        ),
+      
       ),
       body: _isLoading
           ? const Center(
@@ -141,14 +133,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
-                      child: Image.asset(
-                        'assets/images/logo.png',
-                        fit: BoxFit.contain,
-                        height: 120,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                
                     Center(
                       child: Stack(
                         clipBehavior: Clip.none,
@@ -205,14 +190,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    Center(
-                      child: TextButton.icon(
-                        onPressed: _isSaving ? null : _pickImage,
-                        icon: const Icon(Icons.photo_library_outlined),
-                        label: const Text('Update Picture'),
-                      ),
-                    ),
+            const SizedBox(height: 52),
+                const Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Fill in your details to get started.',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+
+               
                     const SizedBox(height: 18),
                     Container(
                       width: double.infinity,
@@ -312,7 +310,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 ),
                               )
                             : const Text(
-                                'Save Profile',
+                                'Submit',
                                 style: TextStyle(
                                   fontFamily: 'Urbanist',
                                   fontSize: 17,

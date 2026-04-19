@@ -211,7 +211,7 @@ class _LiveScreenState extends State<LiveScreen> {
 
   Widget _buildHeader() {
     return Container(
-      height: 110,
+      height: 100,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
@@ -223,7 +223,7 @@ class _LiveScreenState extends State<LiveScreen> {
                 'LIVE',
                 style: TextStyle(
                   fontFamily: 'Urbanist',
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFF1A1A1A),
                 ),

@@ -251,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildHeader() {
     return Container(
-      height: 110,
+      height: 100,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
@@ -320,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen>
                       },
                       child: const Icon(
                         Icons.account_circle_outlined,
-                        size: 30,
+                        size: 25,
                         color: Color(0xFF1A1A1A),
                       ),
                     ),

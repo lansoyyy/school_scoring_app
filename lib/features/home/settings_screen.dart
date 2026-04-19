@@ -152,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     _isLoadingProfile
                         ? 'Loading profile...'
-                        : _profile.displayName,
+                        : _profile.displayName == '' ?  _profile.email : _profile.displayName,
                     style: const TextStyle(
                       fontFamily: 'Urbanist',
                       fontSize: 20,
@@ -163,31 +163,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 4),
                   Text(
                     _profile.userId.isEmpty
-                        ? 'Student ID: Not available'
-                        : 'Student ID: ${_profile.userId}',
+                        ? 'ID: Not available'
+                        : 'ID: ${_profile.userId}',
                     style: const TextStyle(
                       fontFamily: 'Urbanist',
                       fontSize: 14,
                       color: Color(0xFF888888),
                     ),
                   ),
-                  if (_profile.email.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      _profile.email,
-                      style: const TextStyle(
-                        fontFamily: 'Urbanist',
-                        fontSize: 13,
-                        color: Color(0xFF888888),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  TextButton.icon(
-                    onPressed: () => _openEditProfile(pickImageOnOpen: true),
-                    icon: const Icon(Icons.photo_camera_back_outlined),
-                    label: const Text('Update Picture'),
-                  ),
+                
                 ],
               ),
             ),
