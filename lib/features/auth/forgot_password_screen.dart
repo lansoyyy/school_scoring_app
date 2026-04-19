@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../widgets/common/app_logo.dart';
 import 'forgot_password_login_screen.dart';
 import 'services/auth_api_service.dart';
 
@@ -19,6 +20,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   bool _isLoading = false;
+
+  bool get _canSubmit => !_isLoading && _emailCtrl.text.trim().isNotEmpty;
 
   @override
   void dispose() {
@@ -139,20 +142,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            onPressed: _isLoading ? null : () => Navigator.pop(context),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            icon: const Icon(
-              Icons.arrow_back_ios_new,
-              color: AppColors.textPrimary,
-              size: 24,
-            ),
-          ),
+          
           const SizedBox(height: 18),
           Center(
-            child: Image.asset(
-              'assets/images/logo.png',
+            child: AppLogo(
               fit: BoxFit.contain,
               height: 150,
             ),
@@ -169,7 +162,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Enter email address associated with your account. We\'ll send you a link to reset your password.',
+            'Enter email address associated with your account.',
             style: const TextStyle(
               fontFamily: 'Urbanist',
               fontSize: 14,
@@ -185,6 +178,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
             enabled: !_isLoading,
+            onChanged: (_) => setState(() {}),
             inputFormatters: <TextInputFormatter>[
               FilteringTextInputFormatter.deny(RegExp(r'\s')),
             ],
@@ -205,7 +199,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _sendReset,
+              onPressed: _canSubmit ? _sendReset : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.textWhite,

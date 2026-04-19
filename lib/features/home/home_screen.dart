@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants/app_constants.dart';
+import '../../core/services/local_profile_service.dart';
 import 'settings_screen.dart';
 
 class NewsItem {
@@ -72,6 +73,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
+  final LocalProfileService _profileService = const LocalProfileService();
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
@@ -80,58 +82,38 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isLoadingNews = true;
   List<GradeStandings> _standings = [];
   bool _isLoadingStandings = true;
-
-  static const List<Map<String, String>> _fallbackNews = [
-    {
-      'title': 'DSI Basketball Team Wins Regional Championship',
-      'date': 'February 18, 2026',
-      'desc':
-          'Our basketball team clinched the regional championship after an outstanding performance against rival schools. The team showed exceptional teamwork and dedication throughout the tournament.',
-      'image': 'basketball',
-    },
-    {
-      'title': 'Honor Roll Announcement – 2nd Quarter',
-      'date': 'February 15, 2026',
-      'desc':
-          'The 2nd quarter honor roll has been released. Congratulations to all students who made the list this quarter.',
-      'image': 'academic',
-    },
-    {
-      'title': 'Annual Sports Festival 2026 Opening Ceremony',
-      'date': 'February 12, 2026',
-      'desc':
-          'The Annual Sports Festival opened with a grand ceremony featuring all sections competing for the championship.',
-      'image': 'sports',
-    },
-    {
-      'title': 'Volleyball Intramurals: JHS Finals Recap',
-      'date': 'February 10, 2026',
-      'desc':
-          'Grade 10-Rizal defeated Grade 9-Bonifacio in a thrilling 5-set volleyball match to claim the JHS title.',
-      'image': 'volleyball',
-    },
-    {
-      'title': 'Science Fair 2026 – Outstanding Projects',
-      'date': 'February 5, 2026',
-      'desc':
-          'Students from Grade 8 and Grade 11 presented remarkable science projects that wowed the judges.',
-      'image': 'science',
-    },
-    {
-      'title': 'Enrollment for S.Y. 2026-2027 Now Open',
-      'date': 'February 1, 2026',
-      'desc':
-          'Enrollment for the upcoming school year is now open. Visit the registrar\'s office for more information.',
-      'image': 'enrollment',
-    },
-  ];
+  LocalProfileData _profile = const LocalProfileData(
+    userId: '',
+    name: '',
+    email: '',
+    imageBase64: '',
+  );
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadProfile();
     _fetchNews();
     _fetchStandings();
+  }
+
+  Future<void> _loadProfile() async {
+    final profile = await _profileService.loadProfile();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _profile = profile);
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+    );
+
+    await _loadProfile();
   }
 
   Future<void> _fetchNews() async {
@@ -250,6 +232,8 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildHeader() {
+    final profileImageBytes = _profile.imageBytes;
+
     return Container(
       height: 100,
       color: const Color(0xFFF5F5F5),
@@ -310,18 +294,24 @@ class _HomeScreenState extends State<HomeScreen>
                     Image.asset('assets/images/logo.png'),
                     const Spacer(),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsScreen(),
-                          ),
-                        );
-                      },
-                      child: const Icon(
-                        Icons.account_circle_outlined,
-                        size: 25,
-                        color: Color(0xFF1A1A1A),
+                      onTap: _openSettings,
+                      child: SizedBox(
+                        width: 25,
+                        height: 25,
+                        child: profileImageBytes == null
+                            ? const Icon(
+                                Icons.account_circle_outlined,
+                                size: 25,
+                                color: Color(0xFF1A1A1A),
+                              )
+                            : ClipOval(
+                                child: Image.memory(
+                                  profileImageBytes,
+                                  width: 25,
+                                  height: 25,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                       ),
                     ),
                   ],

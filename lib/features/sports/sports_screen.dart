@@ -68,6 +68,7 @@ class SportsScreen extends StatefulWidget {
 class _SportsScreenState extends State<SportsScreen> {
   final DateFormat _apiDateFormat = DateFormat('MM-dd-yyyy');
   final DateFormat _monthLabelFormat = DateFormat('MMMM yyyy');
+  final Map<String, GlobalKey> _calendarDayKeys = <String, GlobalKey>{};
   DateTime _displayedMonth = DateTime(
     DateTime.now().year,
     DateTime.now().month,
@@ -97,6 +98,7 @@ class _SportsScreenState extends State<SportsScreen> {
   @override
   void initState() {
     super.initState();
+    _scheduleSelectedDateVisibility(duration: Duration.zero);
     _fetchGames(date: DateUtils.dateOnly(DateTime.now()));
   }
 
@@ -133,6 +135,7 @@ class _SportsScreenState extends State<SportsScreen> {
           _selectedDate = resolvedDate;
           _displayedMonth = DateTime(resolvedDate.year, resolvedDate.month);
         });
+        _scheduleSelectedDateVisibility();
       } else {
         setState(() {
           _isLoadingGames = false;
@@ -247,6 +250,7 @@ class _SportsScreenState extends State<SportsScreen> {
             return GestureDetector(
               onTap: () => _fetchGames(date: day),
               child: Container(
+                key: _calendarKeyForDate(day),
                 margin: EdgeInsets.only(
                   right: index < _monthDays.length - 1 ? 16 : 0,
                 ),
@@ -336,6 +340,40 @@ class _SportsScreenState extends State<SportsScreen> {
     }
 
     return today;
+  }
+
+  void _scheduleSelectedDateVisibility({
+    Duration duration = const Duration(milliseconds: 250),
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _selectedDate == null) {
+        return;
+      }
+
+      final selectedContext =
+          _calendarDayKeys[_calendarDateKey(_selectedDate!)]?.currentContext;
+      if (selectedContext == null) {
+        return;
+      }
+
+      Scrollable.ensureVisible(
+        selectedContext,
+        alignment: 0.5,
+        duration: duration,
+        curve: duration == Duration.zero ? Curves.linear : Curves.easeOutCubic,
+      );
+    });
+  }
+
+  GlobalKey _calendarKeyForDate(DateTime date) {
+    return _calendarDayKeys.putIfAbsent(
+      _calendarDateKey(date),
+      () => GlobalKey(),
+    );
+  }
+
+  String _calendarDateKey(DateTime date) {
+    return '${date.year}-${date.month}-${date.day}';
   }
 
   String _formatApiDate(DateTime date) => _apiDateFormat.format(date);

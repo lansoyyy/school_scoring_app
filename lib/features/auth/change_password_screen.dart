@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:school_scoring_app/features/auth/login_screen.dart';
-import 'package:school_scoring_app/features/home/home_screen.dart';
 import 'package:school_scoring_app/navigation/main_navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../widgets/common/app_logo.dart';
 import 'services/auth_api_service.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -27,6 +26,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+
+  bool get _canSubmit =>
+      !_isLoading &&
+      _currentPasswordCtrl.text.isNotEmpty &&
+      _newPasswordCtrl.text.isNotEmpty &&
+      _confirmPasswordCtrl.text.isNotEmpty;
 
   @override
   void initState() {
@@ -180,8 +185,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
-                  child: Image.asset(
-                    'assets/images/logo.png',
+                  child: AppLogo(
                     fit: BoxFit.contain,
                     height: 120,
                   ),
@@ -236,6 +240,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   controller: _currentPasswordCtrl,
                   obscureText: _obscureCurrentPassword,
                   enabled: !_isLoading,
+                  onChanged: (_) => setState(() {}),
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 16,
@@ -275,6 +280,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   controller: _newPasswordCtrl,
                   obscureText: _obscureNewPassword,
                   enabled: !_isLoading,
+                  onChanged: (_) => setState(() {}),
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 16,
@@ -314,6 +320,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   controller: _confirmPasswordCtrl,
                   obscureText: _obscureConfirmPassword,
                   enabled: !_isLoading,
+                  onChanged: (_) => setState(() {}),
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 16,
@@ -354,7 +361,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _submit,
+                    onPressed: _canSubmit ? _submit : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.textWhite,

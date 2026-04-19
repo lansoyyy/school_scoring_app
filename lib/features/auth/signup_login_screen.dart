@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:school_scoring_app/features/auth/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/services/local_profile_service.dart';
 import '../../navigation/main_navigation.dart';
+import '../../widgets/common/app_logo.dart';
 import 'services/auth_api_service.dart';
 
 class SignupLoginScreen extends StatefulWidget {
@@ -31,6 +33,8 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
   final TextEditingController _passCtrl = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
+
+  bool get _canSubmit => !_isLoading && _passCtrl.text.isNotEmpty;
 
   @override
   void initState() {
@@ -162,8 +166,7 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
               children: [
                 const SizedBox(height: 12),
                 Center(
-                  child: Image.asset(
-                    'assets/images/logo.png',
+                  child: AppLogo(
                     fit: BoxFit.contain,
                     height: 150,
                   ),
@@ -178,7 +181,17 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 28),
+                  const SizedBox(height: 2),
+                const Text(
+                  'Check your email address for the password.',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
                 _buildLabel('Email Address'),
                 const SizedBox(height: 10),
                 TextFormField(
@@ -212,6 +225,7 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
                   controller: _passCtrl,
                   obscureText: _obscurePassword,
                   enabled: !_isLoading,
+                  onChanged: (_) => setState(() {}),
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 16,
@@ -248,7 +262,7 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
+                    onPressed: _canSubmit ? _login : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.textWhite,
@@ -269,7 +283,7 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
                             ),
                           )
                         : const Text(
-                            'Sign In',
+                            'Submit',
                             style: TextStyle(
                               fontFamily: 'Urbanist',
                               fontSize: 17,
@@ -277,6 +291,39 @@ class _SignupLoginScreenState extends State<SignupLoginScreen> {
                             ),
                           ),
                   ),
+                ),
+                   const SizedBox(height: 26),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Change your mind? ',
+                      style: TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _isLoading
+                          ? null
+                          : () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const LoginScreen(),
+                              ),
+                            ),
+                      child: const Text(
+                        'Sign In',
+                        style: TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

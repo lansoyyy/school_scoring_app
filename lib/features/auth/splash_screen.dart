@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../widgets/common/app_logo.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
 
@@ -60,8 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Stack(
           children: [
             Center(
-              child: Image.asset(
-                'assets/images/logo.png',
+              child: AppLogo(
                 width: 150,
                 height: 150,
                 fit: BoxFit.contain,

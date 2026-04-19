@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/services/local_profile_service.dart';
 import '../../navigation/main_navigation.dart';
+import '../../widgets/common/app_logo.dart';
 import 'forgot_password_screen.dart';
 import 'services/auth_api_service.dart';
 import 'signup_screen.dart';
@@ -170,8 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const SizedBox(height: 6),
                 Center(
-                  child: Image.asset(
-                    'assets/images/logo.png',
+                  child: AppLogo(
                     fit: BoxFit.contain,
                     height: 150,
                   ),

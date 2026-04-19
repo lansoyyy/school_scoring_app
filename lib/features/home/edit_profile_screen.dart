@@ -27,6 +27,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _isSaving = false;
   bool _didAutoOpenImagePicker = false;
 
+  bool get _canSave =>
+      !_isLoading && !_isSaving && _nameCtrl.text.trim().isNotEmpty;
+
   @override
   void initState() {
     super.initState();
@@ -84,13 +87,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (_isSaving) {
+    final trimmedName = _nameCtrl.text.trim();
+    if (_isSaving || trimmedName.isEmpty) {
       return;
     }
 
     setState(() => _isSaving = true);
 
-    await _profileService.saveProfileName(_nameCtrl.text);
+    await _profileService.saveProfileName(trimmedName);
     if (_profileImageBytes != null) {
       await _profileService.saveProfileImageBytes(_profileImageBytes!);
     }
@@ -251,6 +255,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     TextField(
                       controller: _nameCtrl,
                       enabled: !_isSaving,
+                      onChanged: (_) => setState(() {}),
                       style: const TextStyle(
                         fontFamily: 'Urbanist',
                         fontSize: 16,
@@ -289,7 +294,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: _isSaving ? null : _saveProfile,
+                        onPressed: _canSave ? _saveProfile : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.textWhite,

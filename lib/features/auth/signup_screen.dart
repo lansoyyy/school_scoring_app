@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../legal/privacy_policy_screen.dart';
 import '../legal/terms_and_conditions_screen.dart';
+import '../../widgets/common/app_logo.dart';
 import 'login_screen.dart';
 import 'services/auth_api_service.dart';
 import 'signup_login_screen.dart';
@@ -160,8 +161,7 @@ class _SignupScreenState extends State<SignupScreen> {
               children: [
                 const SizedBox(height: 6),
                 Center(
-                  child: Image.asset(
-                    'assets/images/logo.png',
+                  child: AppLogo(
                     fit: BoxFit.contain,
                     height: 150,
                   ),

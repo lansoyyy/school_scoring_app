@@ -9,6 +9,7 @@ class AppAssets {
 
   // Images
   static const String imagesPath = 'assets/images/';
+  static const String logo = '${imagesPath}logo.png';
   static const String userImage = '${imagesPath}user (1).png';
 
   // Placeholder Images (can be used for testing)
