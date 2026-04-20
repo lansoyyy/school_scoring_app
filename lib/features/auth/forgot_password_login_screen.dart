@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_scoring_app/features/auth/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -33,6 +34,11 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
   final TextEditingController _passCtrl = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
+
+  bool get _canSubmit =>
+      !_isLoading &&
+      _emailCtrl.text.trim().isNotEmpty &&
+      _passCtrl.text.isNotEmpty;
 
   @override
   void initState() {
@@ -90,6 +96,18 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
     _emailCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
+  }
+
+  void _goBackToSignIn() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
   }
 
   Future<void> _login() async {
@@ -180,6 +198,15 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
                     color: AppColors.textPrimary,
                   ),
                 ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Check your email address for the password.',
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 28),
                 _buildLabel('Email Address'),
                 const SizedBox(height: 10),
@@ -187,6 +214,7 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
                   enabled: !_isLoading,
+                  onChanged: (_) => setState(() {}),
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 16,
@@ -214,6 +242,7 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
                   controller: _passCtrl,
                   obscureText: _obscurePassword,
                   enabled: !_isLoading,
+                  onChanged: (_) => setState(() {}),
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 16,
@@ -250,7 +279,7 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
+                    onPressed: _canSubmit ? _login : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.textWhite,
@@ -271,7 +300,7 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
                             ),
                           )
                         : const Text(
-                            'Sign In',
+                            'Submit',
                             style: TextStyle(
                               fontFamily: 'Urbanist',
                               fontSize: 17,
@@ -279,6 +308,32 @@ class _ForgotPasswordLoginScreenState extends State<ForgotPasswordLoginScreen> {
                             ),
                           ),
                   ),
+                ),
+                const SizedBox(height: 26),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Change your mind? ',
+                      style: TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _isLoading ? null : _goBackToSignIn,
+                      child: const Text(
+                        'Sign In',
+                        style: TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

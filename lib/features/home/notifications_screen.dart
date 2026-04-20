@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_constants.dart';
+import '../../core/services/notification_permission_service.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -12,6 +11,8 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  final NotificationPermissionService _notificationPermissionService =
+      const NotificationPermissionService();
   bool _allowNotifications = false;
   bool _isLoading = true;
 
@@ -22,21 +23,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _loadPreference() async {
-    final prefs = await SharedPreferences.getInstance();
+    final allowNotifications =
+        await _notificationPermissionService.isNotificationsEnabled();
     if (!mounted) {
       return;
     }
 
     setState(() {
-      _allowNotifications =
-          prefs.getBool(AppConstants.keyAllowNotifications) ?? false;
+      _allowNotifications = allowNotifications;
       _isLoading = false;
     });
   }
 
   Future<void> _updatePreference(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(AppConstants.keyAllowNotifications, value);
+    if (value) {
+      final allowNotifications =
+          await _notificationPermissionService.requestPermission();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() => _allowNotifications = allowNotifications);
+      if (!allowNotifications) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Notifications are blocked on this phone. Enable them in system settings if needed.',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+      return;
+    }
+
+    await _notificationPermissionService.disableNotifications();
 
     if (!mounted) {
       return;

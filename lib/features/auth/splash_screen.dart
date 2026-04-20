@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/services/notification_permission_service.dart';
 import '../../widgets/common/app_logo.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
@@ -15,6 +16,9 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final NotificationPermissionService _notificationPermissionService =
+      const NotificationPermissionService();
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +32,12 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     final prefs = await SharedPreferences.getInstance();
+    await _handleInitialNotificationPrompt();
+
+    if (!mounted) {
+      return;
+    }
+
     final savedUserEmail = (prefs.getString(AppConstants.keyUserEmail) ?? '')
         .trim();
     final savedSignupEmail =
@@ -51,6 +61,55 @@ class _SplashScreenState extends State<SplashScreen> {
         transitionDuration: const Duration(milliseconds: 500),
       ),
     );
+  }
+
+  Future<void> _handleInitialNotificationPrompt() async {
+    final shouldPrompt =
+        await _notificationPermissionService.shouldShowInitialPrompt();
+    if (!mounted || !shouldPrompt) {
+      return;
+    }
+
+    final shouldEnable = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Enable Notifications',
+            style: TextStyle(
+              fontFamily: 'Urbanist',
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: const Text(
+            'Allow notifications on this phone so you can receive important updates from the app.',
+            style: TextStyle(fontFamily: 'Urbanist', height: 1.5),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Not Now'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textWhite,
+              ),
+              child: const Text('Allow'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldEnable == true) {
+      await _notificationPermissionService.requestPermission();
+      return;
+    }
+
+    await _notificationPermissionService.dismissInitialPrompt();
   }
 
   @override

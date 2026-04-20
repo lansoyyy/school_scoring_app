@@ -255,7 +255,7 @@ class _GradesScreenState extends State<GradesScreen> {
           }
 
           if (normalized.length <= 3) {
-            return normalized.toUpperCase();
+            return normalized;
           }
 
           return normalized;
@@ -398,7 +398,7 @@ class _GradesScreenState extends State<GradesScreen> {
                   size: 22,
                 ),
               ),
-              const SizedBox(width: 4),
+           
               const Expanded(
                 child: Text(
                   'PERFORMANCE',

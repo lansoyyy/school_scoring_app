@@ -291,7 +291,9 @@ class _HomeScreenState extends State<HomeScreen>
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset('assets/images/logo.png'),
+                    Image.asset('assets/images/logo.png',
+                    height: 25,
+                    width: 25,),
                     const Spacer(),
                     GestureDetector(
                       onTap: _openSettings,
@@ -516,34 +518,26 @@ class _NewsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: double.infinity,
-          height: 200,
-          color: const Color(0xFF1A1A1A),
-          child: Image.network(
-            news.nlink,
-            width: double.infinity,
-            height: 200,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return const Center(
-                child: Icon(Icons.article, size: 80, color: Color(0xFF444444)),
-              );
-            },
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return const Center(
-                child: CircularProgressIndicator(color: Color(0xFFD4A017)),
-              );
-            },
-          ),
-        ),
-        Padding(
+          Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+            
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    news.title,
+                    style: const TextStyle(
+                      fontFamily: 'Urbanist',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A1A),
+                      height: 1.3,
+                    ),
+                  ),
+                    Text(
                 news.postDate.toUpperCase(),
                 style: const TextStyle(
                   fontFamily: 'Urbanist',
@@ -553,16 +547,8 @@ class _NewsCard extends StatelessWidget {
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                news.title,
-                style: const TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A1A),
-                  height: 1.3,
-                ),
+   
+                ],
               ),
               const SizedBox(height: 8),
               Text(
@@ -577,6 +563,29 @@ class _NewsCard extends StatelessWidget {
             ],
           ),
         ),
+        Container(
+          width: double.infinity,
+          height: 225,
+          color: const Color(0xFF1A1A1A),
+          child: Image.network(
+            news.nlink,
+            width: double.infinity,
+            height: 225,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(
+                child: Icon(Icons.article, size: 80, color: Color(0xFF444444)),
+              );
+            },
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFFD4A017)),
+              );
+            },
+          ),
+        ),
+      
         const Divider(height: 1, color: Color(0xFFEEEEEE)),
       ],
     );

@@ -182,11 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Edit Profile',
               onTap: () => _openEditProfile(),
             ),
-            _buildSettingItem(
-              icon: Icons.photo_camera_back_outlined,
-              title: 'Update Picture',
-              onTap: () => _openEditProfile(pickImageOnOpen: true),
-            ),
+            
             _buildSettingItem(
               icon: Icons.notifications_outlined,
               title: 'Notifications',
