@@ -41,7 +41,7 @@ class StudentsScreen extends StatefulWidget {
 
 class _StudentsScreenState extends State<StudentsScreen> {
   final _searchCtrl = TextEditingController();
-  bool _isSearching = false;
+  final bool _isSearching = false;
   String _searchQuery = '';
   List<StudentItem> _allStudents = [];
   bool _isLoadingStudents = true;
@@ -53,9 +53,19 @@ class _StudentsScreenState extends State<StudentsScreen> {
   }
 
   Future<void> _fetchStudents() async {
+    final sectionId = widget.section['id']?.toString().trim() ?? '';
+    if (sectionId.isEmpty) {
+      setState(() => _isLoadingStudents = false);
+      return;
+    }
+
     try {
       final response = await http
-          .get(Uri.parse('${AppConstants.apiBaseUrl}/student'))
+          .get(
+            Uri.parse('${AppConstants.apiBaseUrl}/student').replace(
+              queryParameters: <String, String>{'sectionId': sectionId},
+            ),
+          )
           .timeout(
             const Duration(milliseconds: AppConstants.connectionTimeout),
           );

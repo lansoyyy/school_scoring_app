@@ -311,8 +311,6 @@ class _GradesScreenState extends State<GradesScreen> {
     return grade.toStringAsFixed(1);
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final selectedPerformance = _selectedPerformance;
@@ -367,7 +365,7 @@ class _GradesScreenState extends State<GradesScreen> {
                                 fontFamily: 'Urbanist',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color:Colors.black,
+                                color: Colors.black,
                               ),
                             ),
                           ],
@@ -390,21 +388,24 @@ class _GradesScreenState extends State<GradesScreen> {
           padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
           child: Row(
             children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Color(0xFF1A1A1A),
-                  size: 22,
+              SizedBox(
+                width: 45,
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: Color(0xFF1A1A1A),
+                    size: 22,
+                  ),
                 ),
               ),
-           
+
               const Expanded(
                 child: Text(
                   'PERFORMANCE',
                   style: TextStyle(
                     fontFamily: 'Urbanist',
-                    fontSize: 22,
+                    fontSize: 19,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF1A1A1A),
                   ),
@@ -482,7 +483,7 @@ class _GradesScreenState extends State<GradesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  studentName,
+                  widget.student['name'],
                   style: const TextStyle(
                     fontFamily: 'Urbanist',
                     fontSize: 16,
@@ -614,7 +615,6 @@ class _GradesScreenState extends State<GradesScreen> {
               ],
             ),
           ),
-        
         ],
       ),
     );

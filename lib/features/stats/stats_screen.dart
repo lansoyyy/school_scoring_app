@@ -249,7 +249,7 @@ class _StatsScreenState extends State<StatsScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: const Text(
             'STATISTICS',
             style: TextStyle(

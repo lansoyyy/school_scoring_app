@@ -240,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen>
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: _isSearching
               ? Row(
                   children: [
@@ -291,26 +291,28 @@ class _HomeScreenState extends State<HomeScreen>
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset('assets/images/logo.png',
-                    height: 25,
-                    width: 25,),
+                    Image.asset(
+                      'assets/images/logo.png',
+                      height: 40,
+                      width: 40,
+                    ),
                     const Spacer(),
                     GestureDetector(
                       onTap: _openSettings,
                       child: SizedBox(
-                        width: 25,
-                        height: 25,
+                        width: 40,
+                        height: 40,
                         child: profileImageBytes == null
                             ? const Icon(
                                 Icons.account_circle_outlined,
-                                size: 25,
+                                size: 40,
                                 color: Color(0xFF1A1A1A),
                               )
                             : ClipOval(
                                 child: Image.memory(
                                   profileImageBytes,
-                                  width: 25,
-                                  height: 25,
+                                  width: 40,
+                                  height: 40,
                                   fit: BoxFit.cover,
                                 ),
                               ),
@@ -518,12 +520,11 @@ class _NewsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          Padding(
+        Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -537,17 +538,16 @@ class _NewsCard extends StatelessWidget {
                       height: 1.3,
                     ),
                   ),
-                    Text(
-                news.postDate.toUpperCase(),
-                style: const TextStyle(
-                  fontFamily: 'Urbanist',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF888888),
-                  letterSpacing: 0.5,
-                ),
-              ),
-   
+                  Text(
+                    news.postDate.toUpperCase(),
+                    style: const TextStyle(
+                      fontFamily: 'Urbanist',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF888888),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -585,7 +585,7 @@ class _NewsCard extends StatelessWidget {
             },
           ),
         ),
-      
+
         const Divider(height: 1, color: Color(0xFFEEEEEE)),
       ],
     );
