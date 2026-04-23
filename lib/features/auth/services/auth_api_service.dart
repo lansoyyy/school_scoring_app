@@ -69,6 +69,24 @@ class AuthApiService {
     );
   }
 
+  Future<AuthApiResponse> guest() async {
+    final uri = Uri.parse('${AppConstants.apiBaseUrl}/guest');
+    try {
+      final response = await http
+          .get(uri)
+          .timeout(
+            const Duration(milliseconds: AppConstants.connectionTimeout),
+          );
+      return _parseResponse(response: response);
+    } catch (_) {
+      return const AuthApiResponse(
+        isSuccess: false,
+        message: 'Unable to connect to server. Please try again.',
+        statusCode: 0,
+      );
+    }
+  }
+
   Future<AuthApiResponse> _request({
     required String endpoint,
     required Map<String, String> params,

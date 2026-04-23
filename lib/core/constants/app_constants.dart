@@ -3,7 +3,7 @@ class AppConstants {
   AppConstants._();
 
   // App Info
-  static const String appName = 'School Sports Scoring';
+  static const String appName = 'Junior MPBL';
   static const String appVersion = '1.0.0';
 
   // Font Family
@@ -54,8 +54,7 @@ class AppConstants {
   static const String keyUserPassword = 'user_password';
   static const String keyRememberMe = 'remember_me';
   static const String keyAllowNotifications = 'allow_notifications';
-  static const String keyNotificationPromptShown =
-      'notification_prompt_shown';
+  static const String keyNotificationPromptShown = 'notification_prompt_shown';
   static const String keyThemeMode = 'theme_mode';
   static const String keyLanguage = 'language';
 

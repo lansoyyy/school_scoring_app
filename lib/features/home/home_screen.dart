@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants/app_constants.dart';
 import '../../core/services/local_profile_service.dart';
+import '../../widgets/common/app_logo.dart';
 import 'settings_screen.dart';
 
 class NewsItem {
@@ -291,11 +292,7 @@ class _HomeScreenState extends State<HomeScreen>
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      height: 40,
-                      width: 40,
-                    ),
+                    AppLogo(height: 40, width: 40),
                     const Spacer(),
                     GestureDetector(
                       onTap: _openSettings,

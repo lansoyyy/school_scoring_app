@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../widgets/common/app_logo.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -16,7 +17,6 @@ class AboutScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
         ),
-    
       ),
       body: SafeArea(
         top: false,
@@ -26,11 +26,7 @@ class AboutScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  fit: BoxFit.contain,
-                  height: 120,
-                ),
+                AppLogo(fit: BoxFit.contain, height: 120),
                 const SizedBox(height: 28),
                 const Align(
                   alignment: Alignment.centerLeft,
@@ -57,7 +53,7 @@ class AboutScreen extends StatelessWidget {
                     border: Border.all(color: AppColors.border),
                   ),
                   child: const Text(
-                    'DSI Don Stevens Institute 2026',
+                    'Junior MPBL 2026',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'Urbanist',

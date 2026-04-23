@@ -6,12 +6,9 @@ import 'legal_document_screen.dart';
 class TermsAndConditionsScreen extends StatelessWidget {
   const TermsAndConditionsScreen({super.key});
 
-  static const String _companyName = 'Courtside Digital Solutions Inc.';
-  static const String _privacyEmail = 'privacy@schoolscoringapp.ph';
-  static const String _supportEmail = 'support@schoolscoringapp.ph';
-  static const String _businessAddress =
-      '123 Courtside Avenue, Quezon City, Metro Manila, Philippines';
-  static const String _jurisdictionCity = 'Quezon City';
+  static const String _companyName = 'Junior MPBL';
+  static const String _dpoEmail = '[Insert Email]';
+  static const String _contactEmail = 'admin@juniormpblofficial.com';
   static const String _lastUpdated = 'Last Updated: April 16, 2026';
 
   @override
@@ -47,7 +44,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
           bullets: [
             'Collection: We collect data such as your name, contact details, and location for purposes of stats tracking.',
             'Consent: By using the App, you consent to the processing of your data as outlined in our Privacy Policy.',
-            'Rights: You have the right to access, correct, or request the deletion of your personal data by contacting our Data Protection Officer at $_privacyEmail.',
+            'Rights: You have the right to access, correct, or request the deletion of your personal data by contacting our Data Protection Officer at $_dpoEmail.',
           ],
         ),
         LegalSectionData(
@@ -85,7 +82,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
         LegalSectionData(
           title: '7. Governing Law and Jurisdiction',
           paragraphs: [
-            'These Terms are governed by the laws of the Republic of the Philippines. Any legal action arising from these Terms shall be filed exclusively in the proper courts of $_jurisdictionCity, Philippines.',
+            'These Terms are governed by the laws of the Republic of the Philippines.',
           ],
         ),
         LegalSectionData(
@@ -96,7 +93,8 @@ class TermsAndConditionsScreen extends StatelessWidget {
         ),
         LegalSectionData(
           title: '9. Contact Us',
-          bullets: ['Email: $_supportEmail', 'Address: $_businessAddress'],
+          bullets: ['Email: $_contactEmail'],
+          isHighlighted: true,
         ),
       ],
     );

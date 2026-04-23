@@ -6,8 +6,8 @@ import 'legal_document_screen.dart';
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
-  static const String _privacyEmail = 'privacy@schoolscoringapp.ph';
-  static const String _hotline = '+63 2 8123 4567';
+  static const String _privacyEmail = 'admin@juniormpblofficial.com';
+  static const String _hotline = '[insert hotline]';
   static const String _lastUpdated = 'Last Updated: April 15, 2026';
 
   @override

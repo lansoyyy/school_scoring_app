@@ -3,8 +3,8 @@ class AppStrings {
   AppStrings._();
 
   // App
-  static const String appName = 'School Sports Scoring';
-  static const String appTitle = 'School Sports Scoring Management';
+  static const String appName = 'Junior MPBL';
+  static const String appTitle = 'Junior MPBL';
 
   // General
   static const String ok = 'OK';

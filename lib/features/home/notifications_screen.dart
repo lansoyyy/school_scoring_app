@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/services/notification_permission_service.dart';
+import '../../widgets/common/app_logo.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -23,8 +24,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _loadPreference() async {
-    final allowNotifications =
-        await _notificationPermissionService.isNotificationsEnabled();
+    final allowNotifications = await _notificationPermissionService
+        .isNotificationsEnabled();
     if (!mounted) {
       return;
     }
@@ -37,8 +38,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _updatePreference(bool value) async {
     if (value) {
-      final allowNotifications =
-          await _notificationPermissionService.requestPermission();
+      final allowNotifications = await _notificationPermissionService
+          .requestPermission();
 
       if (!mounted) {
         return;
@@ -78,7 +79,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
         ),
-      
       ),
       body: _isLoading
           ? const Center(
@@ -91,13 +91,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
-                      child: Image.asset(
-                        'assets/images/logo.png',
-                        fit: BoxFit.contain,
-                        height: 120,
-                      ),
-                    ),
+                    Center(child: AppLogo(fit: BoxFit.contain, height: 120)),
                     const SizedBox(height: 28),
                     const Text(
                       'Notifications',

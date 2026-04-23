@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../navigation/main_navigation.dart';
 import '../legal/privacy_policy_screen.dart';
 import '../legal/terms_and_conditions_screen.dart';
 import '../../widgets/common/app_logo.dart';
@@ -32,6 +33,40 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   bool get _canSubmit => _agreeTerms && !_isLoading;
+
+  Future<void> _continueAsGuest() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
+    final response = await _authApi.guest();
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (response.isSuccess) {
+      final prefs = await SharedPreferences.getInstance();
+      if (response.sessionId != null && response.sessionId!.isNotEmpty) {
+        await prefs.setString(AppConstants.keySessionId, response.sessionId!);
+      }
+      if (response.userId != null && response.userId!.isNotEmpty) {
+        await prefs.setString(AppConstants.keyUserId, response.userId!);
+      }
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainNavigation()),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(response.message),
+        backgroundColor: AppColors.error,
+      ),
+    );
+  }
 
   void _openTermsAndConditions() {
     Navigator.push(
@@ -160,12 +195,7 @@ class _SignupScreenState extends State<SignupScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 6),
-                Center(
-                  child: AppLogo(
-                    fit: BoxFit.contain,
-                    height: 150,
-                  ),
-                ),
+                Center(child: AppLogo(fit: BoxFit.contain, height: 150)),
                 const SizedBox(height: 52),
                 const Text(
                   'Sign Up',
@@ -357,6 +387,51 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: Color(0xFFDDDDDD))),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'OR',
+                        style: TextStyle(
+                          fontFamily: 'Urbanist',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider(color: Color(0xFFDDDDDD))),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _continueAsGuest,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.buttonDisabled,
+                      disabledForegroundColor: AppColors.buttonTextDisabled,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'Continue as Guest',
+                      style: TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
