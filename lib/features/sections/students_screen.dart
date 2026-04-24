@@ -143,14 +143,14 @@ class _StudentsScreenState extends State<StudentsScreen> {
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
+                            horizontal: 0,
                             vertical: 12,
                           ),
                           child: Row(
                             children: [
                               Container(
-                                width: 44,
-                                height: 44,
+                                width: 64,
+                                height: 64,
                                 decoration: const BoxDecoration(
                                   color: Color(0xFFE8E8E8),
                                   shape: BoxShape.circle,
@@ -158,8 +158,8 @@ class _StudentsScreenState extends State<StudentsScreen> {
                                 child: ClipOval(
                                   child: Image.network(
                                     student.slink,
-                                    width: 44,
-                                    height: 44,
+                                    width: 64,
+                                    height: 64,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Center(
@@ -167,7 +167,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                                           initials,
                                           style: const TextStyle(
                                             fontFamily: 'Urbanist',
-                                            fontSize: 14,
+                                            fontSize: 22,
                                             fontWeight: FontWeight.w700,
                                             color: Color(0xFF555555),
                                           ),
@@ -210,6 +210,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                                 color: Color(0xFFCCCCCC),
                                 size: 20,
                               ),
+                              const SizedBox(width: 15),
                             ],
                           ),
                         ),

@@ -185,7 +185,7 @@ class _SportsScreenState extends State<SportsScreen> {
 
   Widget _buildHeader() {
     return Container(
-  height: 100,
+      height: 100,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
@@ -607,8 +607,8 @@ class _ScheduleCard extends StatelessWidget {
                   child: Column(
                     children: [
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: 64,
+                        height: 64,
                         decoration: const BoxDecoration(
                           color: Color(0xFFF5F5F5),
                           shape: BoxShape.circle,
@@ -616,13 +616,13 @@ class _ScheduleCard extends StatelessWidget {
                         child: ClipOval(
                           child: Image.network(
                             game.team1Pic,
-                            width: 48,
-                            height: 48,
+                            width: 64,
+                            height: 64,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return const Icon(
                                 Icons.sports_basketball,
-                                size: 24,
+                                size: 32,
                                 color: Color(0xFF1A1A1A),
                               );
                             },
@@ -756,8 +756,8 @@ class _ScheduleCard extends StatelessWidget {
                   child: Column(
                     children: [
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: 64,
+                        height: 64,
                         decoration: const BoxDecoration(
                           color: Color(0xFFF5F5F5),
                           shape: BoxShape.circle,
@@ -765,13 +765,13 @@ class _ScheduleCard extends StatelessWidget {
                         child: ClipOval(
                           child: Image.network(
                             game.team2Pic,
-                            width: 48,
-                            height: 48,
+                            width: 64,
+                            height: 64,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return const Icon(
                                 Icons.sports_basketball,
-                                size: 24,
+                                size: 32,
                                 color: Color(0xFF1A1A1A),
                               );
                             },

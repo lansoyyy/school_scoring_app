@@ -271,12 +271,12 @@ class _SectionsScreenState extends State<SectionsScreen> {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
             child: Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 64,
+                  height: 64,
                   decoration: const BoxDecoration(
                     color: Color(0xFFE8E8E8),
                     shape: BoxShape.circle,
@@ -284,13 +284,13 @@ class _SectionsScreenState extends State<SectionsScreen> {
                   child: ClipOval(
                     child: Image.network(
                       s.slink,
-                      width: 44,
-                      height: 44,
+                      width: 64,
+                      height: 64,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return const Icon(
                           Icons.school,
-                          size: 20,
+                          size: 32,
                           color: Color(0xFF555555),
                         );
                       },
@@ -328,6 +328,7 @@ class _SectionsScreenState extends State<SectionsScreen> {
                   color: Color(0xFFCCCCCC),
                   size: 20,
                 ),
+                const SizedBox(width: 15),
               ],
             ),
           ),

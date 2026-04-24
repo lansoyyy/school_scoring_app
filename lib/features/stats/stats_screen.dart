@@ -319,10 +319,10 @@ class _StatsScreenState extends State<StatsScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+
                         Container(
-                          width: 44,
-                          height: 44,
+                          width: 64,
+                          height: 64,
                           decoration: const BoxDecoration(
                             color: Color(0xFFE8E8E8),
                             shape: BoxShape.circle,
@@ -330,8 +330,8 @@ class _StatsScreenState extends State<StatsScreen> {
                           child: ClipOval(
                             child: Image.network(
                               s.slink,
-                              width: 44,
-                              height: 44,
+                              width: 64,
+                              height: 64,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Center(
@@ -339,7 +339,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                     _initialsFor(s.name),
                                     style: const TextStyle(
                                       fontFamily: 'Urbanist',
-                                      fontSize: 14,
+                                      fontSize: 22,
                                       fontWeight: FontWeight.w700,
                                       color: Color(0xFF555555),
                                     ),

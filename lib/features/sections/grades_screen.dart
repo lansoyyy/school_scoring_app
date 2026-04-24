@@ -433,12 +433,12 @@ class _GradesScreenState extends State<GradesScreen> {
     final initials = _buildInitials(studentName);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(0, 12, 16, 12),
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 64,
+            height: 64,
             decoration: const BoxDecoration(
               color: Color(0xFFE8E8E8),
               shape: BoxShape.circle,
@@ -450,7 +450,7 @@ class _GradesScreenState extends State<GradesScreen> {
                         initials,
                         style: const TextStyle(
                           fontFamily: 'Urbanist',
-                          fontSize: 16,
+                          fontSize: 24,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF555555),
                         ),
@@ -458,8 +458,8 @@ class _GradesScreenState extends State<GradesScreen> {
                     )
                   : Image.network(
                       imageUrl,
-                      width: 48,
-                      height: 48,
+                      width: 64,
+                      height: 64,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Center(
@@ -467,7 +467,7 @@ class _GradesScreenState extends State<GradesScreen> {
                             initials,
                             style: const TextStyle(
                               fontFamily: 'Urbanist',
-                              fontSize: 16,
+                              fontSize: 24,
                               fontWeight: FontWeight.w700,
                               color: Color(0xFF555555),
                             ),
@@ -561,7 +561,7 @@ class _GradesScreenState extends State<GradesScreen> {
 
     return Container(
       color: const Color(0xFFF5F5F5),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Row(
         children: [
           Container(
