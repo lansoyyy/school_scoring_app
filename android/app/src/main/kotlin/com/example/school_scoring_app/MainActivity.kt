@@ -1,4 +1,4 @@
-package com.example.school_scoring_app
+package com.algovision.dsi
 
 import io.flutter.embedding.android.FlutterActivity
 
