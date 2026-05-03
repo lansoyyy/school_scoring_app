@@ -6,6 +6,7 @@ import '../../core/services/local_profile_service.dart';
 import 'about_screen.dart';
 import '../auth/change_password_screen.dart';
 import '../auth/login_screen.dart';
+import '../auth/signup_screen.dart';
 import 'edit_profile_screen.dart';
 import 'notifications_screen.dart';
 import '../legal/privacy_policy_screen.dart';
@@ -27,6 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     imageBase64: '',
   );
   bool _isLoadingProfile = true;
+  bool _isDeletingAccount = false;
 
   static Future<void> _signOut(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
@@ -39,6 +41,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
+  Future<void> _deleteLocalAccount() async {
+    if (_isDeletingAccount) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Delete Account',
+            style: TextStyle(
+              fontFamily: 'Urbanist',
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: const Text(
+            'This will remove your account data from this device and sign you out. This action cannot be undone.',
+            style: TextStyle(fontFamily: 'Urbanist', height: 1.45),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Delete Account'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    setState(() => _isDeletingAccount = true);
+    await _profileService.clearAccountData();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _isDeletingAccount = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Account deleted on this device.'),
+        backgroundColor: Color(0xFF16A34A),
+      ),
+    );
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const SignupScreen()),
       (route) => false,
     );
   }
@@ -226,10 +293,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             _buildSettingItem(
+              icon: Icons.delete_forever_outlined,
+              title: _isDeletingAccount ? 'Deleting Account...' : 'Delete Account',
+              onTap: _isDeletingAccount ? () {} : _deleteLocalAccount,
+              isDestructive: true,
+            ),
+            _buildSettingItem(
               icon: Icons.logout,
               title: 'Sign Out',
               onTap: () => _signOut(context),
-              isLogout: true,
+              isDestructive: true,
             ),
           ],
         ),
@@ -241,7 +314,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
-    bool isLogout = false,
+    bool isDestructive = false,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -252,7 +325,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: ListTile(
         leading: Icon(
           icon,
-          color: isLogout ? const Color(0xFFEF4444) : const Color(0xFF1A1A1A),
+          color: isDestructive
+              ? const Color(0xFFEF4444)
+              : const Color(0xFF1A1A1A),
         ),
         title: Text(
           title,
@@ -260,7 +335,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             fontFamily: 'Urbanist',
             fontSize: 15,
             fontWeight: FontWeight.w500,
-            color: isLogout ? const Color(0xFFEF4444) : const Color(0xFF1A1A1A),
+            color: isDestructive
+                ? const Color(0xFFEF4444)
+                : const Color(0xFF1A1A1A),
           ),
         ),
         trailing: const Icon(Icons.chevron_right, color: Color(0xFF888888)),

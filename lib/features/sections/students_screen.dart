@@ -21,12 +21,17 @@ class StudentItem {
 
   factory StudentItem.fromJson(Map<String, dynamic> json) {
     return StudentItem(
-      id: json['id'] as int,
-      slink: json['slink'] as String,
-      fname: json['fname'] as String,
-      sname: json['sname'] as String,
-      position: json['position'] as String? ?? '',
+      id: _parseInt(json['id']),
+      slink: (json['slink'] ?? '').toString(),
+      fname: (json['fname'] ?? '').toString(),
+      sname: (json['sname'] ?? '').toString(),
+      position: (json['position'] ?? '').toString(),
     );
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }
 
@@ -45,6 +50,22 @@ class _StudentsScreenState extends State<StudentsScreen> {
   String _searchQuery = '';
   List<StudentItem> _allStudents = [];
   bool _isLoadingStudents = true;
+
+  String get _sectionName => (widget.section['name'] ?? 'Students').toString();
+
+  String _studentDisplayName(StudentItem student) {
+    final name = '${student.fname} ${student.sname}'.trim();
+    return name.isEmpty ? 'Unknown Student' : name;
+  }
+
+  String _studentInitials(StudentItem student) {
+    final first = student.fname.trim();
+    final last = student.sname.trim();
+    final f = first.isNotEmpty ? first[0] : '';
+    final l = last.isNotEmpty ? last[0] : '';
+    final initials = '$f$l';
+    return initials.isEmpty ? 'S' : initials.toUpperCase();
+  }
 
   @override
   void initState() {
@@ -71,9 +92,11 @@ class _StudentsScreenState extends State<StudentsScreen> {
           );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final decoded = json.decode(response.body);
+        final List<dynamic> data = decoded is List<dynamic> ? decoded : [];
         setState(() {
           _allStudents = data
+              .whereType<Map<String, dynamic>>()
               .map((item) => StudentItem.fromJson(item))
               .toList();
           _isLoadingStudents = false;
@@ -116,14 +139,16 @@ class _StudentsScreenState extends State<StudentsScreen> {
                 ? const Center(
                     child: CircularProgressIndicator(color: Color(0xFFD4A017)),
                   )
-                : ListView.separated(
+                : _filtered.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.separated(
                     padding: EdgeInsets.zero,
                     itemCount: _filtered.length,
                     separatorBuilder: (_, __) =>
                         const Divider(height: 1, color: Color(0xFFEEEEEE)),
                     itemBuilder: (context, i) {
                       final student = _filtered[i];
-                      final initials = student.fname[0] + student.sname[0];
+                      final initials = _studentInitials(student);
                       return InkWell(
                         onTap: () => Navigator.push(
                           context,
@@ -131,7 +156,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                             builder: (_) => GradesScreen(
                               student: {
                                 'id': student.id,
-                                'name': '${student.fname} ${student.sname}',
+                                'name': _studentDisplayName(student),
                                 'gender': '',
                                 'rank': '',
                                 'slink': student.slink,
@@ -183,7 +208,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '${student.fname} ${student.sname}',
+                                      _studentDisplayName(student),
                                       style: const TextStyle(
                                         fontFamily: 'Urbanist',
                                         fontSize: 15,
@@ -276,7 +301,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                     ),
                     Expanded(
                       child: Text(
-                        widget.section['name'],
+                        _sectionName,
                         style: const TextStyle(
                           fontFamily: 'Urbanist',
                           fontSize: 18,
@@ -287,6 +312,47 @@ class _StudentsScreenState extends State<StudentsScreen> {
                     ),
                   ],
                 ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    final isSearching = _searchQuery.trim().isNotEmpty;
+    final title = isSearching ? 'No matching players' : 'No players yet';
+    final subtitle = isSearching
+        ? 'Try a different name or clear the search.'
+        : 'There are no players available for this team right now.';
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.groups_outlined, size: 56, color: Color(0xFFBDBDBD)),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Urbanist',
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Urbanist',
+                fontSize: 14,
+                color: Color(0xFF8A8A8A),
+              ),
+            ),
+          ],
         ),
       ),
     );

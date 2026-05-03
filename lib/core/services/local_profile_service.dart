@@ -108,4 +108,16 @@ class LocalProfileService {
       base64Encode(imageBytes),
     );
   }
+
+  Future<void> clearAccountData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(AppConstants.keySessionId);
+    await prefs.remove(AppConstants.keySignupEmail);
+    await prefs.remove(AppConstants.keyUserId);
+    await prefs.remove(AppConstants.keyUserName);
+    await prefs.remove(AppConstants.keyUserEmail);
+    await prefs.remove(AppConstants.keyUserProfileImage);
+    await prefs.remove(AppConstants.keyUserPassword);
+    await prefs.remove(AppConstants.keyRememberMe);
+  }
 }
