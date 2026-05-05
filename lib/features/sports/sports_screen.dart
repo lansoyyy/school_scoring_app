@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:school_scoring_app/core/constants/app_constants.dart';
@@ -182,10 +183,11 @@ class _SportsScreenState extends State<SportsScreen> {
       ),
     );
   }
-
+bool isIos = false;
   Widget _buildHeader() {
+    isIos = Platform.isIOS;
     return Container(
-      height: 100,
+      height: isIos ? 125:100,
       color: const Color(0xFFF5F5F5),
       child: SafeArea(
         bottom: false,
